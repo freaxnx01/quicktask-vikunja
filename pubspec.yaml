@@ -1,0 +1,37 @@
+name: quicktask_vikunja
+description: "Android share-target app for quickly adding tasks to a self-hosted Vikunja instance"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Networking
+  http: ^1.2.2
+
+  # HTML title parsing
+  html: ^0.15.5
+
+  # Secure storage for API token
+  flutter_secure_storage: ^9.2.3
+
+  # Share target - receive shared content
+  receive_sharing_intent: ^1.8.1
+
+  # State management
+  provider: ^6.1.2
+
+  # Shared preferences for task history & project usage
+  shared_preferences: ^2.3.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
