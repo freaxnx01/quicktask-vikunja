@@ -33,7 +33,7 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   final _searchController = TextEditingController();
   final _focusNode = FocusNode();
 
-  String _taskName = '';
+  ResolvedTask? _resolvedTask;
   List<Project> _allProjects = [];
   List<int> _recentIds = [];
   bool _isLoading = true;
@@ -49,13 +49,13 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   Future<void> _initialize() async {
     try {
       final results = await Future.wait([
-        widget.titleFetcher.resolveTaskName(widget.sharedText, widget.extraSubject),
+        widget.titleFetcher.resolveTask(widget.sharedText, widget.extraSubject),
         widget.repository.getAllProjects(),
         widget.usageTracker.getRecentProjectIds(),
       ]);
 
       setState(() {
-        _taskName = results[0] as String;
+        _resolvedTask = results[0] as ResolvedTask;
         _allProjects = results[1] as List<Project>;
         _recentIds = results[2] as List<int>;
         _isLoading = false;
@@ -90,13 +90,19 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
 
   Future<void> _onProjectSelected(Project project) async {
     setState(() => _isCreating = true);
+    final task = _resolvedTask!;
 
     try {
-      await widget.repository.createTask(project.id, _taskName);
+      await widget.repository.createTask(
+        project.id,
+        task.title,
+        description: task.url,
+      );
       await widget.usageTracker.recordUsage(project.id);
       await widget.taskHistory.addEntry(TaskHistoryEntry(
-        taskName: _taskName,
+        taskName: task.title,
         projectName: project.title,
+        url: task.url,
         timestamp: DateTime.now().millisecondsSinceEpoch,
       ));
 
@@ -131,16 +137,26 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       body: Column(
         children: [
           // Task name preview
-          if (_taskName.isNotEmpty)
+          if (_resolvedTask != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                _taskName,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _resolvedTask!.title,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (_resolvedTask!.url != null)
+                    Text(
+                      TitleFetcher.shortenUrl(_resolvedTask!.url!),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                     ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                ],
               ),
             ),
           // Search field

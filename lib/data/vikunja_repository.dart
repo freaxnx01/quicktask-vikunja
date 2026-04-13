@@ -21,7 +21,7 @@ class VikunjaRepository {
     return allProjects.where((p) => !p.isArchived).toList();
   }
 
-  Future<TaskResponse> createTask(int projectId, String title) {
-    return _api.createTask(projectId, CreateTaskRequest(title: title));
+  Future<TaskResponse> createTask(int projectId, String title, {String? description}) {
+    return _api.createTask(projectId, CreateTaskRequest(title: title, description: description));
   }
 }

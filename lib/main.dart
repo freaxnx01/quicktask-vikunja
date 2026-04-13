@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'data/secure_storage.dart';
@@ -10,6 +11,10 @@ import 'data/task_history.dart';
 import 'ui/setup_screen.dart';
 import 'ui/recent_tasks_screen.dart';
 import 'ui/project_picker_screen.dart';
+
+bool get _isMobile =>
+    defaultTargetPlatform == TargetPlatform.android ||
+    defaultTargetPlatform == TargetPlatform.iOS;
 
 void main() {
   runApp(const QuickTaskApp());
@@ -63,7 +68,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _checkConfig();
-    _setupShareListener();
+    if (_isMobile) _setupShareListener();
   }
 
   Future<void> _checkConfig() async {
@@ -92,16 +97,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _handleSharedText(String text) async {
-    final configured = await _storage.isConfigured;
-    if (!configured) {
-      setState(() {
-        _pendingSharedText = text;
-        _showSetup = true;
-      });
-      return;
-    }
-
+  void _navigateToProjectPicker(String text) {
     if (mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -119,6 +115,19 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+  }
+
+  void _handleSharedText(String text) async {
+    final configured = await _storage.isConfigured;
+    if (!configured) {
+      setState(() {
+        _pendingSharedText = text;
+        _showSetup = true;
+      });
+      return;
+    }
+
+    _navigateToProjectPicker(text);
   }
 
   @override
@@ -154,6 +163,7 @@ class _HomePageState extends State<HomePage> {
     return RecentTasksScreen(
       taskHistory: _taskHistory,
       onSettingsClick: () => setState(() => _showSetup = true),
+      onAddTask: _navigateToProjectPicker,
     );
   }
 }

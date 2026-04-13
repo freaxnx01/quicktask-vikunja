@@ -19,7 +19,7 @@ class SetupScreen extends StatefulWidget {
 }
 
 class _SetupScreenState extends State<SetupScreen> {
-  final _urlController = TextEditingController();
+  final _urlController = TextEditingController(text: 'https://todo.home.freaxnx01.ch');
   final _tokenController = TextEditingController();
   bool _isLoading = false;
   bool _tokenVisible = false;
@@ -80,7 +80,8 @@ class _SetupScreenState extends State<SetupScreen> {
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Column(
+          child: AutofillGroup(
+            child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -98,6 +99,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.url,
+                autofillHints: const [AutofillHints.url],
                 onChanged: (_) => setState(() => _error = null),
               ),
               const SizedBox(height: 16),
@@ -114,6 +116,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   ),
                 ),
                 obscureText: !_tokenVisible,
+                autofillHints: const [AutofillHints.password],
                 onChanged: (_) => setState(() => _error = null),
               ),
               if (_error != null) ...[
@@ -135,6 +138,7 @@ class _SetupScreenState extends State<SetupScreen> {
                     : const Text('Connect'),
               ),
             ],
+          ),
           ),
         ),
       ),

@@ -1,7 +1,12 @@
 class CreateTaskRequest {
   final String title;
-  CreateTaskRequest({required this.title});
-  Map<String, dynamic> toJson() => {'title': title};
+  final String? description;
+  CreateTaskRequest({required this.title, this.description});
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{'title': title};
+    if (description != null) map['description'] = description;
+    return map;
+  }
 }
 
 class TaskResponse {
