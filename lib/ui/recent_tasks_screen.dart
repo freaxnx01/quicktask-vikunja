@@ -28,6 +28,12 @@ class _RecentTasksScreenState extends State<RecentTasksScreen> {
     _load();
   }
 
+  @override
+  void didUpdateWidget(RecentTasksScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _load();
+  }
+
   Future<void> _load() async {
     final entries = await widget.taskHistory.getEntries();
     setState(() => _entries = entries);
