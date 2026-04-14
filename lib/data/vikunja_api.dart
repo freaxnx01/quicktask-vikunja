@@ -50,6 +50,21 @@ class VikunjaApi {
     return TaskResponse.fromJson(json.decode(response.body));
   }
 
+  Future<List<TaskSummary>> getRecentProjectTasks(int projectId, {int limit = 10}) async {
+    final base = await _baseUrl();
+    final headers = await _headers();
+    final response = await http.get(
+      Uri.parse('$base/api/v1/projects/$projectId/tasks?per_page=$limit&sort_by[]=created&order_by[]=desc&filter=done=false'),
+      headers: headers,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load tasks: ${response.statusCode}');
+    }
+    final decoded = json.decode(response.body);
+    if (decoded is! List) return [];
+    return decoded.map((j) => TaskSummary.fromJson(j)).toList();
+  }
+
   Future<bool> validateCredentials() async {
     try {
       await getProjects(perPage: 1);

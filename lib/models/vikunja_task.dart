@@ -21,3 +21,16 @@ class TaskResponse {
     );
   }
 }
+
+class TaskSummary {
+  final int id;
+  final String title;
+  TaskSummary({required this.id, required this.title});
+
+  factory TaskSummary.fromJson(Map<String, dynamic> json) {
+    return TaskSummary(
+      id: json['id'] as int,
+      title: json['title'] as String,
+    );
+  }
+}

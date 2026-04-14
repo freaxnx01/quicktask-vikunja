@@ -4,6 +4,7 @@ import '../data/vikunja_repository.dart';
 import '../data/title_fetcher.dart';
 import '../data/project_usage_tracker.dart';
 import '../data/task_history.dart';
+import 'task_confirmation_screen.dart';
 
 class ProjectPickerScreen extends StatefulWidget {
   final String sharedText;
@@ -93,7 +94,7 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
     final task = _resolvedTask!;
 
     try {
-      await widget.repository.createTask(
+      final created = await widget.repository.createTask(
         project.id,
         task.title,
         description: task.url,
@@ -107,11 +108,18 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       ));
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Task added to ${project.title}')),
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => TaskConfirmationScreen(
+              projectId: project.id,
+              projectName: project.title,
+              createdTaskId: created.id,
+              createdTaskTitle: created.title,
+              repository: widget.repository,
+              onDone: widget.onDone,
+            ),
+          ),
         );
-        await Future.delayed(const Duration(milliseconds: 1500));
-        widget.onDone();
       }
     } catch (e) {
       if (mounted) {
