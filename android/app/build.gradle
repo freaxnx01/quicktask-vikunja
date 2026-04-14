@@ -8,7 +8,6 @@ plugins {
 android {
     namespace = "ch.freaxnx01.quicktask_vikunja"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
