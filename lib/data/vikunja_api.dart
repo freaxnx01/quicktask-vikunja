@@ -65,6 +65,25 @@ class VikunjaApi {
     return decoded.map((j) => TaskSummary.fromJson(j)).toList();
   }
 
+  Future<void> uploadAttachments(int taskId, List<String> filePaths) async {
+    if (filePaths.isEmpty) return;
+    final base = await _baseUrl();
+    final token = await _storage.apiToken;
+    final request = http.MultipartRequest(
+      'PUT',
+      Uri.parse('$base/api/v1/tasks/$taskId/attachments'),
+    );
+    request.headers['Authorization'] = 'Bearer ${token ?? ''}';
+    for (final path in filePaths) {
+      request.files.add(await http.MultipartFile.fromPath('files', path));
+    }
+    final streamed = await request.send();
+    if (streamed.statusCode != 200 && streamed.statusCode != 201) {
+      final body = await streamed.stream.bytesToString();
+      throw Exception('Attachment upload failed (${streamed.statusCode}): $body');
+    }
+  }
+
   Future<bool> validateCredentials() async {
     try {
       await getProjects(perPage: 1);

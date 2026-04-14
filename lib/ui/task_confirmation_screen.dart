@@ -9,6 +9,9 @@ class TaskConfirmationScreen extends StatefulWidget {
   final String createdTaskTitle;
   final VikunjaRepository repository;
   final VoidCallback onDone;
+  final int attachmentCount;
+  final String? attachmentError;
+  final Future<void> Function()? retryAttachments;
 
   const TaskConfirmationScreen({
     super.key,
@@ -18,6 +21,9 @@ class TaskConfirmationScreen extends StatefulWidget {
     required this.createdTaskTitle,
     required this.repository,
     required this.onDone,
+    this.attachmentCount = 0,
+    this.attachmentError,
+    this.retryAttachments,
   });
 
   @override
@@ -27,6 +33,8 @@ class TaskConfirmationScreen extends StatefulWidget {
 class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
   List<TaskSummary>? _tasks;
   String? _error;
+  late String? _attachmentError = widget.attachmentError;
+  bool _isRetrying = false;
 
   @override
   void initState() {
@@ -63,6 +71,7 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
               ],
             ),
           ),
+          if (widget.attachmentCount > 0) _buildAttachmentStatus(scheme),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
@@ -130,6 +139,61 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
         return _taskTile(scheme, t.title, isNew: isNew);
       },
     );
+  }
+
+  Widget _buildAttachmentStatus(ColorScheme scheme) {
+    final count = widget.attachmentCount;
+    final err = _attachmentError;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            err == null ? Icons.attach_file : Icons.error_outline,
+            size: 18,
+            color: err == null ? scheme.primary : scheme.error,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              err == null
+                  ? '$count attachment${count == 1 ? '' : 's'} uploaded'
+                  : 'Attachment upload failed',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: err == null ? scheme.onSurface : scheme.error,
+                  ),
+            ),
+          ),
+          if (err != null && widget.retryAttachments != null)
+            TextButton(
+              onPressed: _isRetrying ? null : _retry,
+              child: _isRetrying
+                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Retry'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _retry() async {
+    setState(() => _isRetrying = true);
+    try {
+      await widget.retryAttachments!();
+      if (mounted) {
+        setState(() {
+          _attachmentError = null;
+          _isRetrying = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _attachmentError = '$e';
+          _isRetrying = false;
+        });
+      }
+    }
   }
 
   Widget _taskTile(ColorScheme scheme, String title, {required bool isNew}) {

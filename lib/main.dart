@@ -8,6 +8,7 @@ import 'data/vikunja_repository.dart';
 import 'data/title_fetcher.dart';
 import 'data/project_usage_tracker.dart';
 import 'data/task_history.dart';
+import 'models/shared_content.dart';
 import 'ui/setup_screen.dart';
 import 'ui/recent_tasks_screen.dart';
 import 'ui/project_picker_screen.dart';
@@ -62,7 +63,7 @@ class _HomePageState extends State<HomePage> {
   bool _loading = true;
 
   StreamSubscription? _intentSub;
-  String? _pendingSharedText;
+  SharedContent? _pendingShared;
 
   @override
   void initState() {
@@ -81,53 +82,62 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _setupShareListener() {
-    // Handle share intent when app is already running
-    _intentSub = ReceiveSharingIntent.instance.getMediaStream().listen((value) {
-      if (value.isNotEmpty && value.first.path.isNotEmpty) {
-        _handleSharedText(value.first.path);
-      }
-    });
-
-    // Handle share intent that started the app
+    _intentSub = ReceiveSharingIntent.instance.getMediaStream().listen(_handleShared);
     ReceiveSharingIntent.instance.getInitialMedia().then((value) {
-      if (value.isNotEmpty && value.first.path.isNotEmpty) {
-        _handleSharedText(value.first.path);
+      if (value.isNotEmpty) {
+        _handleShared(value);
         ReceiveSharingIntent.instance.reset();
       }
     });
   }
 
-  void _navigateToProjectPicker(String text) {
-    if (mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ProjectPickerScreen(
-            sharedText: text,
-            repository: _repository,
-            titleFetcher: _titleFetcher,
-            usageTracker: _usageTracker,
-            taskHistory: _taskHistory,
-            onDone: () {
-              Navigator.of(context).pop();
-              setState(() {});
-            },
-          ),
-        ),
-      );
+  SharedContent _toSharedContent(List<SharedMediaFile> media) {
+    String? text;
+    final files = <SharedFile>[];
+    for (final m in media) {
+      if (m.type == SharedMediaType.text || m.type == SharedMediaType.url) {
+        // For text/url shares the plugin puts the payload in `path`.
+        if (m.path.isNotEmpty) text ??= m.path;
+      } else {
+        if (m.path.isNotEmpty) files.add(SharedFile.fromPath(m.path));
+      }
     }
+    return SharedContent(text: text, files: files);
   }
 
-  void _handleSharedText(String text) async {
+  void _navigateToProjectPicker(SharedContent content) {
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProjectPickerScreen(
+          shared: content,
+          repository: _repository,
+          titleFetcher: _titleFetcher,
+          usageTracker: _usageTracker,
+          taskHistory: _taskHistory,
+          onDone: () {
+            Navigator.of(context).pop();
+            setState(() {});
+          },
+        ),
+      ),
+    );
+  }
+
+  void _handleShared(List<SharedMediaFile> media) async {
+    if (media.isEmpty) return;
+    final content = _toSharedContent(media);
+    if (!content.hasText && !content.hasFiles) return;
+
     final configured = await _storage.isConfigured;
     if (!configured) {
       setState(() {
-        _pendingSharedText = text;
+        _pendingShared = content;
         _showSetup = true;
       });
       return;
     }
-
-    _navigateToProjectPicker(text);
+    _navigateToProjectPicker(content);
   }
 
   @override
@@ -151,10 +161,10 @@ class _HomePageState extends State<HomePage> {
             _isConfigured = true;
             _showSetup = false;
           });
-          if (_pendingSharedText != null) {
-            final text = _pendingSharedText!;
-            _pendingSharedText = null;
-            _handleSharedText(text);
+          if (_pendingShared != null) {
+            final content = _pendingShared!;
+            _pendingShared = null;
+            _navigateToProjectPicker(content);
           }
         },
       );
@@ -163,7 +173,7 @@ class _HomePageState extends State<HomePage> {
     return RecentTasksScreen(
       taskHistory: _taskHistory,
       onSettingsClick: () => setState(() => _showSetup = true),
-      onAddTask: _navigateToProjectPicker,
+      onAddTask: (text) => _navigateToProjectPicker(SharedContent(text: text)),
     );
   }
 }

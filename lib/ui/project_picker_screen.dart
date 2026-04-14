@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/project.dart';
+import '../models/shared_content.dart';
 import '../data/vikunja_repository.dart';
 import '../data/title_fetcher.dart';
 import '../data/project_usage_tracker.dart';
@@ -7,8 +8,7 @@ import '../data/task_history.dart';
 import 'task_confirmation_screen.dart';
 
 class ProjectPickerScreen extends StatefulWidget {
-  final String sharedText;
-  final String? extraSubject;
+  final SharedContent shared;
   final VikunjaRepository repository;
   final TitleFetcher titleFetcher;
   final ProjectUsageTracker usageTracker;
@@ -17,8 +17,7 @@ class ProjectPickerScreen extends StatefulWidget {
 
   const ProjectPickerScreen({
     super.key,
-    required this.sharedText,
-    this.extraSubject,
+    required this.shared,
     required this.repository,
     required this.titleFetcher,
     required this.usageTracker,
@@ -32,9 +31,10 @@ class ProjectPickerScreen extends StatefulWidget {
 
 class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   final _searchController = TextEditingController();
+  final _titleController = TextEditingController();
   final _focusNode = FocusNode();
 
-  ResolvedTask? _resolvedTask;
+  String? _resolvedUrl;
   List<Project> _allProjects = [];
   List<int> _recentIds = [];
   bool _isLoading = true;
@@ -49,19 +49,35 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
 
   Future<void> _initialize() async {
     try {
-      final results = await Future.wait([
-        widget.titleFetcher.resolveTask(widget.sharedText, widget.extraSubject),
+      final futures = <Future>[
         widget.repository.getAllProjects(),
         widget.usageTracker.getRecentProjectIds(),
-      ]);
+      ];
+      // Only resolve URL title for text-only shares.
+      if (widget.shared.hasText && !widget.shared.hasFiles) {
+        futures.add(widget.titleFetcher.resolveTask(
+          widget.shared.text!,
+          widget.shared.extraSubject,
+        ));
+      }
+      final results = await Future.wait(futures);
 
-      setState(() {
-        _resolvedTask = results[0] as ResolvedTask;
-        _allProjects = results[1] as List<Project>;
-        _recentIds = results[2] as List<int>;
-        _isLoading = false;
-      });
+      _allProjects = results[0] as List<Project>;
+      _recentIds = results[1] as List<int>;
 
+      String initialTitle;
+      if (results.length > 2) {
+        final resolved = results[2] as ResolvedTask;
+        initialTitle = resolved.title;
+        _resolvedUrl = resolved.url;
+      } else if (widget.shared.hasFiles) {
+        initialTitle = widget.shared.files.map((f) => f.name).join(' + ');
+      } else {
+        initialTitle = widget.shared.text ?? '';
+      }
+      _titleController.text = initialTitle;
+
+      setState(() => _isLoading = false);
       _focusNode.requestFocus();
     } catch (e) {
       setState(() {
@@ -90,22 +106,36 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   }
 
   Future<void> _onProjectSelected(Project project) async {
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      setState(() => _error = 'Task title cannot be empty');
+      return;
+    }
     setState(() => _isCreating = true);
-    final task = _resolvedTask!;
 
     try {
       final created = await widget.repository.createTask(
         project.id,
-        task.title,
-        description: task.url,
+        title,
+        description: _resolvedUrl,
       );
       await widget.usageTracker.recordUsage(project.id);
       await widget.taskHistory.addEntry(TaskHistoryEntry(
-        taskName: task.title,
+        taskName: title,
         projectName: project.title,
-        url: task.url,
+        url: _resolvedUrl,
         timestamp: DateTime.now().millisecondsSinceEpoch,
       ));
+
+      final filePaths = widget.shared.files.map((f) => f.path).toList();
+      String? attachmentError;
+      if (filePaths.isNotEmpty) {
+        try {
+          await widget.repository.uploadAttachments(created.id, filePaths);
+        } catch (e) {
+          attachmentError = '$e';
+        }
+      }
 
       if (mounted) {
         await Navigator.of(context).pushReplacement(
@@ -117,6 +147,11 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
               createdTaskTitle: created.title,
               repository: widget.repository,
               onDone: widget.onDone,
+              attachmentCount: filePaths.length,
+              attachmentError: attachmentError,
+              retryAttachments: attachmentError == null
+                  ? null
+                  : () => widget.repository.uploadAttachments(created.id, filePaths),
             ),
           ),
         );
@@ -134,6 +169,7 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _titleController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -144,26 +180,46 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       appBar: AppBar(title: const Text('Add to project')),
       body: Column(
         children: [
-          // Task name preview
-          if (_resolvedTask != null)
+          // Title (editable) + optional URL + file chips
+          if (!_isLoading)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _resolvedTask!.title,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  TextField(
+                    controller: _titleController,
                     maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    minLines: 1,
+                    decoration: const InputDecoration(
+                      labelText: 'Task title',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
-                  if (_resolvedTask!.url != null)
+                  if (_resolvedUrl != null) ...[
+                    const SizedBox(height: 4),
                     Text(
-                      TitleFetcher.shortenUrl(_resolvedTask!.url!),
+                      TitleFetcher.shortenUrl(_resolvedUrl!),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
+                  ],
+                  if (widget.shared.hasFiles) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: widget.shared.files
+                          .map((f) => Chip(
+                                avatar: const Icon(Icons.attach_file, size: 16),
+                                label: Text(f.name, overflow: TextOverflow.ellipsis),
+                                visualDensity: VisualDensity.compact,
+                              ))
+                          .toList(),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -211,6 +267,11 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       children: [
         ListView(
           children: [
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              ),
             if (recent.isNotEmpty) ...[
               _sectionHeader('Recent'),
               ...recent.map((p) => _projectTile(p)),

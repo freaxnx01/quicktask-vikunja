@@ -28,4 +28,8 @@ class VikunjaRepository {
   Future<List<TaskSummary>> getRecentProjectTasks(int projectId, {int limit = 10}) {
     return _api.getRecentProjectTasks(projectId, limit: limit);
   }
+
+  Future<void> uploadAttachments(int taskId, List<String> filePaths) {
+    return _api.uploadAttachments(taskId, filePaths);
+  }
 }
