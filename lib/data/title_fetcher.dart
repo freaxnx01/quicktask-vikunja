@@ -14,11 +14,14 @@ class TitleFetcher {
 
   bool isUrl(String text) => _urlPattern.hasMatch(text.trim());
 
-  /// Returns a short domain label for a URL, e.g. "reisereporter.de"
+  /// Returns a short domain label for a URL, e.g. "reisereporter.de".
+  /// Falls back to the original input when the URL has no parseable host —
+  /// `Uri.parse` is lenient and returns an empty host instead of throwing.
   static String shortenUrl(String url) {
     try {
       final uri = Uri.parse(url);
       var host = uri.host;
+      if (host.isEmpty) return url;
       if (host.startsWith('www.')) host = host.substring(4);
       return host;
     } catch (_) {

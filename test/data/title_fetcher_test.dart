@@ -47,12 +47,12 @@ void main() {
           'reisereporter.de');
     });
 
-    test('returns empty string for input with no host (current behavior)', () {
-      // KNOWN DEFECT: the catch-fallback only fires on parse exceptions, but
-      // `Uri.parse` accepts almost anything and returns an empty host. So
-      // bizarre inputs render as a blank label in the UI rather than the
-      // original text. Documented here so a future fix has a regression target.
-      expect(TitleFetcher.shortenUrl('not a url at all'), '');
+    test('returns the original input when the URL has no host', () {
+      expect(TitleFetcher.shortenUrl('not a url at all'), 'not a url at all');
+    });
+
+    test('returns the original input for a scheme with no host', () {
+      expect(TitleFetcher.shortenUrl('https://'), 'https://');
     });
   });
 
