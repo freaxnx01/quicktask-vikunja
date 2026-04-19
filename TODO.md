@@ -4,7 +4,7 @@ Pending work queued for Claude to pick up in a future session. Ordered by priori
 
 ## Bugs to fix
 
-- [ ] **[#11](https://github.com/freaxnx01/quicktask-vikunja/issues/11) — `TitleFetcher.shortenUrl` returns empty string for unparseable input.** Labeled `claude-ready`; intended for the autonomous trigger but queued here in case the daily trigger limit is hit. Acceptance criteria are in the issue. Don't forget to update `test/data/title_fetcher_test.dart` to assert the new correct behavior and remove the "known defect" comment.
+- [x] **[#11](https://github.com/freaxnx01/quicktask-vikunja/issues/11) — `TitleFetcher.shortenUrl` returns empty string for unparseable input.** Labeled `claude-ready`; intended for the autonomous trigger but queued here in case the daily trigger limit is hit. Acceptance criteria are in the issue. Don't forget to update `test/data/title_fetcher_test.dart` to assert the new correct behavior and remove the "known defect" comment.
 
 ## Test quality follow-ups (from PR #12 review)
 
