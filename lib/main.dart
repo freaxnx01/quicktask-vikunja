@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'data/secure_storage.dart';
+import 'data/share_intent_source.dart';
 import 'data/vikunja_api.dart';
 import 'data/vikunja_repository.dart';
 import 'data/title_fetcher.dart';
@@ -44,19 +45,39 @@ class QuickTaskApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final SecureStorage? storage;
+  final VikunjaRepository? repository;
+  final TitleFetcher? titleFetcher;
+  final ProjectUsageTracker? usageTracker;
+  final TaskHistory? taskHistory;
+  final ShareIntentSource? shareSource;
+  final bool? enableShareListener;
+
+  const HomePage({
+    super.key,
+    this.storage,
+    this.repository,
+    this.titleFetcher,
+    this.usageTracker,
+    this.taskHistory,
+    this.shareSource,
+    this.enableShareListener,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final _storage = SecureStorage();
-  late final _api = VikunjaApi(_storage);
-  late final _repository = VikunjaRepository(_api);
-  final _titleFetcher = TitleFetcher();
-  final _usageTracker = ProjectUsageTracker();
-  final _taskHistory = TaskHistory();
+  late final SecureStorage _storage = widget.storage ?? SecureStorage();
+  late final VikunjaRepository _repository =
+      widget.repository ?? VikunjaRepository(VikunjaApi(_storage));
+  late final TitleFetcher _titleFetcher = widget.titleFetcher ?? TitleFetcher();
+  late final ProjectUsageTracker _usageTracker = widget.usageTracker ?? ProjectUsageTracker();
+  late final TaskHistory _taskHistory = widget.taskHistory ?? TaskHistory();
+  late final ShareIntentSource _shareSource =
+      widget.shareSource ?? const DefaultShareIntentSource();
+  late final bool _shareEnabled = widget.enableShareListener ?? _isMobile;
 
   bool _isConfigured = false;
   bool _showSetup = false;
@@ -69,7 +90,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _checkConfig();
-    if (_isMobile) _setupShareListener();
+    if (_shareEnabled) _setupShareListener();
   }
 
   Future<void> _checkConfig() async {
@@ -82,11 +103,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _setupShareListener() {
-    _intentSub = ReceiveSharingIntent.instance.getMediaStream().listen(_handleShared);
-    ReceiveSharingIntent.instance.getInitialMedia().then((value) {
+    _intentSub = _shareSource.getMediaStream().listen(_handleShared);
+    _shareSource.getInitialMedia().then((value) {
       if (value.isNotEmpty) {
         _handleShared(value);
-        ReceiveSharingIntent.instance.reset();
+        _shareSource.reset();
       }
     });
   }
@@ -107,7 +128,8 @@ class _HomePageState extends State<HomePage> {
 
   void _navigateToProjectPicker(SharedContent content) {
     if (!mounted) return;
-    Navigator.of(context).push(
+    final navigator = Navigator.of(context);
+    navigator.pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => ProjectPickerScreen(
           shared: content,
@@ -116,11 +138,12 @@ class _HomePageState extends State<HomePage> {
           usageTracker: _usageTracker,
           taskHistory: _taskHistory,
           onDone: () {
-            Navigator.of(context).pop();
+            navigator.popUntil((route) => route.isFirst);
             setState(() {});
           },
         ),
       ),
+      (route) => route.isFirst,
     );
   }
 
