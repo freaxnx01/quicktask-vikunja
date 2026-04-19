@@ -6,8 +6,9 @@ import 'secure_storage.dart';
 
 class VikunjaApi {
   final SecureStorage _storage;
+  final http.Client _client;
 
-  VikunjaApi(this._storage);
+  VikunjaApi(this._storage, {http.Client? client}) : _client = client ?? http.Client();
 
   Future<Map<String, String>> _headers() async {
     final token = await _storage.apiToken;
@@ -25,7 +26,7 @@ class VikunjaApi {
   Future<List<Project>> getProjects({int perPage = 100, int page = 1}) async {
     final base = await _baseUrl();
     final headers = await _headers();
-    final response = await http.get(
+    final response = await _client.get(
       Uri.parse('$base/api/v1/projects?per_page=$perPage&page=$page'),
       headers: headers,
     );
@@ -39,7 +40,7 @@ class VikunjaApi {
   Future<TaskResponse> createTask(int projectId, CreateTaskRequest task) async {
     final base = await _baseUrl();
     final headers = await _headers();
-    final response = await http.put(
+    final response = await _client.put(
       Uri.parse('$base/api/v1/projects/$projectId/tasks'),
       headers: headers,
       body: json.encode(task.toJson()),
@@ -53,7 +54,7 @@ class VikunjaApi {
   Future<List<TaskSummary>> getRecentProjectTasks(int projectId, {int limit = 10}) async {
     final base = await _baseUrl();
     final headers = await _headers();
-    final response = await http.get(
+    final response = await _client.get(
       Uri.parse('$base/api/v1/projects/$projectId/tasks?per_page=$limit&sort_by[]=created&order_by[]=desc&filter=done=false'),
       headers: headers,
     );
