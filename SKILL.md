@@ -1,8 +1,8 @@
 [//]: # (Source of truth: .ai/base-instructions.md + .ai/stacks/flutter.md — update those, then regenerate by re-running /init-instructions. Project-specific content lives in CLAUDE.project.md and is NOT regenerated.)
 
-# CLAUDE.md
+# SKILL.md — OpenClaw Agent Skill
 
-Agent context for Claude Code. Read this before taking any action in this repository.
+This skill configures OpenClaw for this project.
 
 > **Also read [`CLAUDE.project.md`](./CLAUDE.project.md)** for project-specific conventions (share-intent lifecycle, autonomous-work branch naming, QuickTask-only commands). It is the source of truth for anything unique to this repo.
 
