@@ -6,6 +6,10 @@ Instructions for Claude (and other coding agents) working in this repo.
 
 QuickTask is a Flutter app whose primary purpose is to act as an **Android share target**: the user shares a URL, text, or file from another app and QuickTask creates a task in a self-hosted Vikunja instance. Desktop (Windows/Linux) is supported for manual entry only — share-intent flows are mobile-only.
 
+## Queued work
+
+Open items that aren't yet issues live in `TODO.md` at the repo root. Check it at the start of any session where the user hasn't given you a specific task — pick the top unchecked item, implement it, open a PR, and check the box in the same PR.
+
 ## Architecture (one-paragraph)
 
 `lib/main.dart` owns the share-intent listener (`receive_sharing_intent`) and a tiny route stack: `RecentTasksScreen` (home) → `ProjectPickerScreen` (push) → `TaskConfirmationScreen` (pushReplacement). Data layer in `lib/data/` (Vikunja API client, secure storage for token, local task history & project-usage tracker via `shared_preferences`, HTML title fetcher). Models in `lib/models/`.
