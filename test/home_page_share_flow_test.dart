@@ -43,6 +43,11 @@ class _FakeRepository extends VikunjaRepository {
 
   int _nextId = 100;
   final List<String> createdTitles = [];
+  final List<List<String>> uploadedPathsByCall = [];
+  int _failUploadsRemaining = 0;
+
+  /// Make the next [count] uploadAttachments calls throw, then succeed.
+  void failNextUploads(int count) => _failUploadsRemaining = count;
 
   @override
   Future<List<Project>> getAllProjects() async =>
@@ -59,7 +64,13 @@ class _FakeRepository extends VikunjaRepository {
   Future<List<TaskSummary>> getRecentProjectTasks(int projectId, {int limit = 10}) async => [];
 
   @override
-  Future<void> uploadAttachments(int taskId, List<String> filePaths) async {}
+  Future<void> uploadAttachments(int taskId, List<String> filePaths) async {
+    uploadedPathsByCall.add(List.of(filePaths));
+    if (_failUploadsRemaining > 0) {
+      _failUploadsRemaining--;
+      throw Exception('upload failed');
+    }
+  }
 }
 
 class _FakeShareIntentSource implements ShareIntentSource {
@@ -80,6 +91,12 @@ class _FakeShareIntentSource implements ShareIntentSource {
 
   void fireTextShare(String text) {
     _controller.add([SharedMediaFile(path: text, type: SharedMediaType.text)]);
+  }
+
+  void fireFileShare(List<String> paths, {SharedMediaType type = SharedMediaType.image}) {
+    _controller.add([
+      for (final p in paths) SharedMediaFile(path: p, type: type),
+    ]);
   }
 
   Future<void> dispose() => _controller.close();
@@ -248,6 +265,87 @@ void main() {
     expect(find.byType(ProjectPickerScreen), findsOneWidget);
     expect(find.widgetWithText(TextField, 'IMG_2024_07_13.jpg'), findsOneWidget,
         reason: 'For pure-file shares, title should default to the file name');
+  });
+
+  testWidgets('cold-start share via getInitialMedia opens picker with shared URL', (tester) async {
+    final shareSource = _FakeShareIntentSource()..initialMedia = [
+      SharedMediaFile(path: 'https://cold.example/page', type: SharedMediaType.text),
+    ];
+    final repository = _FakeRepository();
+    addTearDown(shareSource.dispose);
+
+    await tester.pumpWidget(_buildApp(shareSource: shareSource, repository: repository));
+    await _settle(tester);
+
+    expect(find.byType(ProjectPickerScreen), findsOneWidget,
+        reason: 'cold-start share must open the picker, not just sit on the home screen');
+    expect(find.widgetWithText(TextField, 'Title for https://cold.example/page'),
+        findsOneWidget);
+    expect(shareSource.resetCalled, isTrue);
+  });
+
+  testWidgets('multi-file share creates one task and uploads N attachments', (tester) async {
+    final shareSource = _FakeShareIntentSource();
+    final repository = _FakeRepository();
+    addTearDown(shareSource.dispose);
+
+    await tester.pumpWidget(_buildApp(shareSource: shareSource, repository: repository));
+    await _settle(tester);
+
+    shareSource.fireFileShare([
+      '/tmp/cache/IMG_001.jpg',
+      '/tmp/cache/IMG_002.jpg',
+      '/tmp/cache/IMG_003.jpg',
+    ]);
+    await _settle(tester);
+
+    expect(find.byType(ProjectPickerScreen), findsOneWidget);
+    // One chip per file shown to the user.
+    expect(find.text('IMG_001.jpg'), findsOneWidget);
+    expect(find.text('IMG_002.jpg'), findsOneWidget);
+    expect(find.text('IMG_003.jpg'), findsOneWidget);
+
+    await tester.tap(find.text('Test Project'));
+    await _settle(tester);
+
+    // Exactly one createTask, exactly one uploadAttachments call with all 3 paths.
+    expect(repository.createdTitles, hasLength(1));
+    expect(repository.uploadedPathsByCall, hasLength(1));
+    expect(repository.uploadedPathsByCall.single, [
+      '/tmp/cache/IMG_001.jpg',
+      '/tmp/cache/IMG_002.jpg',
+      '/tmp/cache/IMG_003.jpg',
+    ]);
+    // Confirmation surfaces success.
+    expect(find.text('3 attachments uploaded'), findsOneWidget);
+  });
+
+  testWidgets('attachment upload failure shows error and Retry recovers', (tester) async {
+    final shareSource = _FakeShareIntentSource();
+    final repository = _FakeRepository()..failNextUploads(1);
+    addTearDown(shareSource.dispose);
+
+    await tester.pumpWidget(_buildApp(shareSource: shareSource, repository: repository));
+    await _settle(tester);
+
+    shareSource.fireFileShare(['/tmp/IMG.jpg']);
+    await _settle(tester);
+    await tester.tap(find.text('Test Project'));
+    await _settle(tester);
+
+    // Confirmation appears with the failure message + Retry button.
+    expect(find.text('Attachment upload failed'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+
+    // Tap Retry — second upload succeeds, error message clears.
+    await tester.tap(find.text('Retry'));
+    await _settle(tester);
+
+    expect(find.text('Attachment upload failed'), findsNothing,
+        reason: 'after a successful retry the error banner must clear');
+    expect(find.text('1 attachment uploaded'), findsOneWidget);
+    expect(repository.uploadedPathsByCall, hasLength(2),
+        reason: 'one failed call + one retry call = 2 uploadAttachments invocations');
   });
 
   testWidgets('redirects share to setup screen when not configured', (tester) async {
