@@ -7,5 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-20
+
 ### Added
 - Favorite projects in the project picker — star a project to pin it to the top; favorites section is shown above Recent and All Projects.
