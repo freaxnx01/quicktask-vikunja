@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/vikunja_repository.dart';
 import '../models/vikunja_task.dart';
+import 'widgets/version_footer.dart';
 
 class TaskConfirmationScreen extends StatefulWidget {
   final int projectId;
@@ -58,6 +59,7 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
       appBar: AppBar(
         title: Text('Added to ${widget.projectName}'),
       ),
+      bottomNavigationBar: const VersionFooter(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

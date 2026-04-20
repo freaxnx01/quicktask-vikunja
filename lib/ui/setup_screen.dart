@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/secure_storage.dart';
 import '../data/vikunja_repository.dart';
+import 'widgets/version_footer.dart';
 
 class SetupScreen extends StatefulWidget {
   final SecureStorage storage;
@@ -77,6 +78,7 @@ class _SetupScreenState extends State<SetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: const VersionFooter(),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

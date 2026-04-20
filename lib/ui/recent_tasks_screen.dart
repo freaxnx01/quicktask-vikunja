@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../build_info.dart';
 import '../data/task_history.dart';
 import '../data/title_fetcher.dart';
+import 'widgets/version_footer.dart';
 
 class RecentTasksScreen extends StatefulWidget {
   final TaskHistory taskHistory;
@@ -131,6 +131,7 @@ class _RecentTasksScreenState extends State<RecentTasksScreen> {
         tooltip: 'Add task',
         child: const Icon(Icons.add),
       ),
+      bottomNavigationBar: const VersionFooter(),
       body: Column(
         children: [
           Expanded(
@@ -187,15 +188,6 @@ class _RecentTasksScreenState extends State<RecentTasksScreen> {
                       );
                     },
                   ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Text(
-              'v$appVersion • Built $buildTimestamp',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
-                  ),
-            ),
           ),
         ],
       ),

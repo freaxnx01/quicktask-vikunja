@@ -6,6 +6,7 @@ import '../data/title_fetcher.dart';
 import '../data/project_usage_tracker.dart';
 import '../data/task_history.dart';
 import 'task_confirmation_screen.dart';
+import 'widgets/version_footer.dart';
 
 class ProjectPickerScreen extends StatefulWidget {
   final SharedContent shared;
@@ -178,6 +179,7 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Add to project')),
+      bottomNavigationBar: const VersionFooter(),
       body: Column(
         children: [
           // Title (editable) + optional URL + file chips
