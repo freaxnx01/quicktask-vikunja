@@ -4,6 +4,7 @@ import '../models/shared_content.dart';
 import '../data/vikunja_repository.dart';
 import '../data/title_fetcher.dart';
 import '../data/project_usage_tracker.dart';
+import '../data/project_favorites.dart';
 import '../data/task_history.dart';
 import 'task_confirmation_screen.dart';
 import 'widgets/version_footer.dart';
@@ -13,6 +14,7 @@ class ProjectPickerScreen extends StatefulWidget {
   final VikunjaRepository repository;
   final TitleFetcher titleFetcher;
   final ProjectUsageTracker usageTracker;
+  final ProjectFavorites? favorites;
   final TaskHistory taskHistory;
   final VoidCallback onDone;
 
@@ -24,6 +26,7 @@ class ProjectPickerScreen extends StatefulWidget {
     required this.usageTracker,
     required this.taskHistory,
     required this.onDone,
+    this.favorites,
   });
 
   @override
@@ -35,9 +38,12 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   final _titleController = TextEditingController();
   final _focusNode = FocusNode();
 
+  late final ProjectFavorites _favorites = widget.favorites ?? ProjectFavorites();
+
   String? _resolvedUrl;
   List<Project> _allProjects = [];
   List<int> _recentIds = [];
+  Set<int> _favoriteIds = <int>{};
   bool _isLoading = true;
   bool _isCreating = false;
   String? _error;
@@ -53,6 +59,7 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       final futures = <Future>[
         widget.repository.getAllProjects(),
         widget.usageTracker.getRecentProjectIds(),
+        _favorites.getFavoriteIds(),
       ];
       // Only resolve URL title for text-only shares.
       if (widget.shared.hasText && !widget.shared.hasFiles) {
@@ -65,10 +72,11 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
 
       _allProjects = results[0] as List<Project>;
       _recentIds = results[1] as List<int>;
+      _favoriteIds = results[2] as Set<int>;
 
       String initialTitle;
-      if (results.length > 2) {
-        final resolved = results[2] as ResolvedTask;
+      if (results.length > 3) {
+        final resolved = results[3] as ResolvedTask;
         initialTitle = resolved.title;
         _resolvedUrl = resolved.url;
       } else if (widget.shared.hasFiles) {
@@ -97,13 +105,33 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
     return projects;
   }
 
-  List<Project> get _recentProjects =>
-      _filteredProjects.where((p) => _recentIds.contains(p.id)).toList();
+  List<Project> get _favoriteProjects {
+    final favorites =
+        _filteredProjects.where((p) => _favoriteIds.contains(p.id)).toList();
+    favorites.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    return favorites;
+  }
+
+  List<Project> get _recentProjects => _filteredProjects
+      .where((p) => !_favoriteIds.contains(p.id) && _recentIds.contains(p.id))
+      .toList();
 
   List<Project> get _otherProjects {
-    final other = _filteredProjects.where((p) => !_recentIds.contains(p.id)).toList();
+    final other = _filteredProjects
+        .where((p) => !_favoriteIds.contains(p.id) && !_recentIds.contains(p.id))
+        .toList();
     other.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
     return other;
+  }
+
+  Future<void> _toggleFavorite(Project project) async {
+    await _favorites.toggle(project.id);
+    if (!mounted) return;
+    setState(() {
+      if (!_favoriteIds.add(project.id)) {
+        _favoriteIds.remove(project.id);
+      }
+    });
   }
 
   Future<void> _onProjectSelected(Project project) async {
@@ -262,6 +290,7 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       );
     }
 
+    final favorites = _favoriteProjects;
     final recent = _recentProjects;
     final other = _otherProjects;
 
@@ -274,6 +303,10 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ),
+            if (favorites.isNotEmpty) ...[
+              _sectionHeader('Favorites'),
+              ...favorites.map((p) => _projectTile(p)),
+            ],
             if (recent.isNotEmpty) ...[
               _sectionHeader('Recent'),
               ...recent.map((p) => _projectTile(p)),
@@ -303,8 +336,18 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   }
 
   Widget _projectTile(Project project) {
+    final isFavorite = _favoriteIds.contains(project.id);
+    final colors = Theme.of(context).colorScheme;
     return ListTile(
       title: Text(project.title),
+      trailing: IconButton(
+        icon: Icon(
+          isFavorite ? Icons.star : Icons.star_border,
+          color: isFavorite ? colors.primary : colors.onSurfaceVariant,
+        ),
+        tooltip: isFavorite ? 'Unfavorite' : 'Favorite',
+        onPressed: _isCreating ? null : () => _toggleFavorite(project),
+      ),
       onTap: _isCreating ? null : () => _onProjectSelected(project),
     );
   }
