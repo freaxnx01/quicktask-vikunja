@@ -20,35 +20,29 @@ VikunjaApi _apiWith(MockClient client) =>
 
 void main() {
   group('VikunjaApi.getProjects', () {
-    test('paginates until a partial batch is returned', () async {
-      var calls = 0;
+    test('sends per_page and page in the query string', () async {
+      Uri? captured;
       final client = MockClient((req) async {
-        calls++;
-        expect(req.url.queryParameters['per_page'], '100');
-        final page = int.parse(req.url.queryParameters['page']!);
-        if (page == 1) {
-          // Full batch — should trigger another fetch.
-          final body = List.generate(
-            100,
-            (i) => {'id': i + 1, 'title': 'P${i + 1}', 'is_archived': false},
-          );
-          return http.Response(json.encode(body), 200);
-        }
-        // Partial batch — stops pagination.
-        return http.Response(
-          json.encode([
-            {'id': 101, 'title': 'P101', 'is_archived': false},
-          ]),
-          200,
-        );
+        captured = req.url;
+        return http.Response('[]', 200);
       });
+      await _apiWith(client).getProjects(perPage: 25, page: 3);
+      expect(captured!.queryParameters['per_page'], '25');
+      expect(captured!.queryParameters['page'], '3');
+    });
 
-      final repo = _apiWith(client);
-      final all = await repo.getProjects(perPage: 100, page: 1);
-      // getProjects itself only returns one page; pagination is in
-      // VikunjaRepository.getAllProjects, so we just check page-1 here.
-      expect(calls, 1);
-      expect(all, hasLength(100));
+    test('parses the returned project list', () async {
+      final client = MockClient((_) async => http.Response(
+            json.encode([
+              {'id': 1, 'title': 'P1', 'is_archived': false},
+              {'id': 2, 'title': 'P2', 'is_archived': true},
+            ]),
+            200,
+          ));
+      final projects = await _apiWith(client).getProjects();
+      expect(projects, hasLength(2));
+      expect(projects[0].id, 1);
+      expect(projects[1].isArchived, isTrue);
     });
 
     test('throws on non-200 status', () async {

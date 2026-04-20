@@ -8,7 +8,7 @@ Pending work queued for Claude to pick up in a future session. Ordered by priori
 
 ## Test quality follow-ups (from PR #12 review)
 
-- [ ] Rename or split the misnamed test `vikunja_api_test.dart::'paginates until a partial batch is returned'`. Today it asserts `calls == 1` — the real pagination loop lives in `VikunjaRepository.getAllProjects` and is untested. Add a `test/data/vikunja_repository_test.dart` covering the loop-until-partial branch with a `MockClient`.
+- [x] Rename or split the misnamed test `vikunja_api_test.dart::'paginates until a partial batch is returned'`. Today it asserts `calls == 1` — the real pagination loop lives in `VikunjaRepository.getAllProjects` and is untested. Add a `test/data/vikunja_repository_test.dart` covering the loop-until-partial branch with a `MockClient`.
 - [ ] Tighten the brittle query-string assertion in `vikunja_api_test.dart::'passes limit + sort filters in query string'`. Prefer `captured!.queryParametersAll['sort_by[]']` over raw `contains('sort_by%5B%5D=...')` so encoding details of the Dart SDK aren't locked in.
 - [ ] `createTask` error-path test only covers 500. Add a 4xx case (e.g. 422 validation) — one extra `expect` closes the gap.
 - [ ] `project_picker_screen_test.dart::'non-recent projects are sorted alphabetically'` never seeds `_recentIds`. The `_recentProjects` section ordering is still untested — add a test that seeds recents and asserts their order.
