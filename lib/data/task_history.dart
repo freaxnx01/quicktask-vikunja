@@ -15,11 +15,11 @@ class TaskHistoryEntry {
   });
 
   Map<String, dynamic> toJson() => {
-    'taskName': taskName,
-    'projectName': projectName,
-    if (url != null) 'url': url,
-    'timestamp': timestamp,
-  };
+        'taskName': taskName,
+        'projectName': projectName,
+        if (url != null) 'url': url,
+        'timestamp': timestamp,
+      };
 
   factory TaskHistoryEntry.fromJson(Map<String, dynamic> json) {
     return TaskHistoryEntry(

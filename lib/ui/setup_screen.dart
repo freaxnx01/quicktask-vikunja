@@ -20,7 +20,8 @@ class SetupScreen extends StatefulWidget {
 }
 
 class _SetupScreenState extends State<SetupScreen> {
-  final _urlController = TextEditingController(text: 'https://todo.home.freaxnx01.ch');
+  final _urlController =
+      TextEditingController(text: 'https://todo.home.freaxnx01.ch');
   final _tokenController = TextEditingController();
   bool _isLoading = false;
   bool _tokenVisible = false;
@@ -84,63 +85,65 @@ class _SetupScreenState extends State<SetupScreen> {
           padding: const EdgeInsets.all(24),
           child: AutofillGroup(
             child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'QuickTask Setup',
-                style: Theme.of(context).textTheme.headlineMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              TextField(
-                controller: _urlController,
-                decoration: const InputDecoration(
-                  labelText: 'Instance URL',
-                  hintText: 'https://vikunja.example.com',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.url,
-                autofillHints: const [AutofillHints.url],
-                onChanged: (_) => setState(() => _error = null),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _tokenController,
-                decoration: InputDecoration(
-                  labelText: 'API Token',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _tokenVisible ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () => setState(() => _tokenVisible = !_tokenVisible),
-                  ),
-                ),
-                obscureText: !_tokenVisible,
-                autofillHints: const [AutofillHints.password],
-                onChanged: (_) => setState(() => _error = null),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 8),
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  'QuickTask Setup',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                TextField(
+                  controller: _urlController,
+                  decoration: const InputDecoration(
+                    labelText: 'Instance URL',
+                    hintText: 'https://vikunja.example.com',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.url,
+                  autofillHints: const [AutofillHints.url],
+                  onChanged: (_) => setState(() => _error = null),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _tokenController,
+                  decoration: InputDecoration(
+                    labelText: 'API Token',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _tokenVisible ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _tokenVisible = !_tokenVisible),
+                    ),
+                  ),
+                  obscureText: !_tokenVisible,
+                  autofillHints: const [AutofillHints.password],
+                  onChanged: (_) => setState(() => _error = null),
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _error!,
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: _isLoading ? null : _connect,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Connect'),
                 ),
               ],
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _isLoading ? null : _connect,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Connect'),
-              ),
-            ],
-          ),
+            ),
           ),
         ),
       ),

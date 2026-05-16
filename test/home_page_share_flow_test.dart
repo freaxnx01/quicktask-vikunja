@@ -29,7 +29,8 @@ class _FakeSecureStorage extends SecureStorage {
 
 class _FakeTitleFetcher extends TitleFetcher {
   @override
-  Future<ResolvedTask> resolveTask(String sharedText, String? extraSubject) async {
+  Future<ResolvedTask> resolveTask(
+      String sharedText, String? extraSubject) async {
     return ResolvedTask(title: 'Title for $sharedText', url: sharedText);
   }
 }
@@ -54,14 +55,17 @@ class _FakeRepository extends VikunjaRepository {
       [Project(id: 1, title: 'Test Project')];
 
   @override
-  Future<TaskResponse> createTask(int projectId, String title, {String? description}) async {
+  Future<TaskResponse> createTask(int projectId, String title,
+      {String? description}) async {
     final id = _nextId++;
     createdTitles.add(title);
     return TaskResponse(id: id, title: title);
   }
 
   @override
-  Future<List<TaskSummary>> getRecentProjectTasks(int projectId, {int limit = 10}) async => [];
+  Future<List<TaskSummary>> getRecentProjectTasks(int projectId,
+          {int limit = 10}) async =>
+      [];
 
   @override
   Future<void> uploadAttachments(int taskId, List<String> filePaths) async {
@@ -93,7 +97,8 @@ class _FakeShareIntentSource implements ShareIntentSource {
     _controller.add([SharedMediaFile(path: text, type: SharedMediaType.text)]);
   }
 
-  void fireFileShare(List<String> paths, {SharedMediaType type = SharedMediaType.image}) {
+  void fireFileShare(List<String> paths,
+      {SharedMediaType type = SharedMediaType.image}) {
     _controller.add([
       for (final p in paths) SharedMediaFile(path: p, type: type),
     ]);
@@ -135,7 +140,8 @@ void main() {
       final repository = _FakeRepository();
       addTearDown(shareSource.dispose);
 
-      await tester.pumpWidget(_buildApp(shareSource: shareSource, repository: repository));
+      await tester.pumpWidget(
+          _buildApp(shareSource: shareSource, repository: repository));
       await _settle(tester);
 
       // Verify we start on the recent tasks screen.
@@ -171,21 +177,27 @@ void main() {
     },
   );
 
-  testWidgets('reset() is called after handling the initial share intent', (tester) async {
-    final shareSource = _FakeShareIntentSource()..initialMedia = [
-      SharedMediaFile(path: 'https://example.com/x', type: SharedMediaType.text),
-    ];
+  testWidgets('reset() is called after handling the initial share intent',
+      (tester) async {
+    final shareSource = _FakeShareIntentSource()
+      ..initialMedia = [
+        SharedMediaFile(
+            path: 'https://example.com/x', type: SharedMediaType.text),
+      ];
     final repository = _FakeRepository();
     addTearDown(shareSource.dispose);
 
-    await tester.pumpWidget(_buildApp(shareSource: shareSource, repository: repository));
+    await tester.pumpWidget(
+        _buildApp(shareSource: shareSource, repository: repository));
     await _settle(tester);
 
     expect(shareSource.resetCalled, isTrue,
-        reason: 'reset() must be called after consuming initial media or it can replay');
+        reason:
+            'reset() must be called after consuming initial media or it can replay');
   });
 
-  testWidgets('records the new task in local history after Done', (tester) async {
+  testWidgets('records the new task in local history after Done',
+      (tester) async {
     final shareSource = _FakeShareIntentSource();
     final repository = _FakeRepository();
     final history = TaskHistory(); // backed by SharedPreferences mock
@@ -212,7 +224,8 @@ void main() {
 
     final entries = await history.getEntries();
     expect(entries, hasLength(1));
-    expect(entries.first.taskName, 'Title for https://reisereporter.de/article');
+    expect(
+        entries.first.taskName, 'Title for https://reisereporter.de/article');
     expect(entries.first.url, 'https://reisereporter.de/article');
     expect(entries.first.projectName, 'Test Project');
   });
@@ -234,7 +247,9 @@ void main() {
       ),
     ));
     await _settle(tester);
-    expect(find.text('No tasks yet.\nShare a URL or text from another app, or tap + to add one.'),
+    expect(
+        find.text(
+            'No tasks yet.\nShare a URL or text from another app, or tap + to add one.'),
         findsOneWidget);
 
     shareSource.fireTextShare('https://wemolo.com/parking');
@@ -246,19 +261,23 @@ void main() {
 
     expect(find.byType(RecentTasksScreen), findsOneWidget);
     expect(find.text('Title for https://wemolo.com/parking'), findsOneWidget,
-        reason: 'Newly added task must appear in recent list without app restart');
+        reason:
+            'Newly added task must appear in recent list without app restart');
   });
 
-  testWidgets('picker pre-fills title from shared file name when no text', (tester) async {
+  testWidgets('picker pre-fills title from shared file name when no text',
+      (tester) async {
     final shareSource = _FakeShareIntentSource();
     final repository = _FakeRepository();
     addTearDown(shareSource.dispose);
 
-    await tester.pumpWidget(_buildApp(shareSource: shareSource, repository: repository));
+    await tester.pumpWidget(
+        _buildApp(shareSource: shareSource, repository: repository));
     await _settle(tester);
 
     shareSource._controller.add([
-      SharedMediaFile(path: '/tmp/cache/IMG_2024_07_13.jpg', type: SharedMediaType.image),
+      SharedMediaFile(
+          path: '/tmp/cache/IMG_2024_07_13.jpg', type: SharedMediaType.image),
     ]);
     await _settle(tester);
 
@@ -267,29 +286,38 @@ void main() {
         reason: 'For pure-file shares, title should default to the file name');
   });
 
-  testWidgets('cold-start share via getInitialMedia opens picker with shared URL', (tester) async {
-    final shareSource = _FakeShareIntentSource()..initialMedia = [
-      SharedMediaFile(path: 'https://cold.example/page', type: SharedMediaType.text),
-    ];
+  testWidgets(
+      'cold-start share via getInitialMedia opens picker with shared URL',
+      (tester) async {
+    final shareSource = _FakeShareIntentSource()
+      ..initialMedia = [
+        SharedMediaFile(
+            path: 'https://cold.example/page', type: SharedMediaType.text),
+      ];
     final repository = _FakeRepository();
     addTearDown(shareSource.dispose);
 
-    await tester.pumpWidget(_buildApp(shareSource: shareSource, repository: repository));
+    await tester.pumpWidget(
+        _buildApp(shareSource: shareSource, repository: repository));
     await _settle(tester);
 
     expect(find.byType(ProjectPickerScreen), findsOneWidget,
-        reason: 'cold-start share must open the picker, not just sit on the home screen');
-    expect(find.widgetWithText(TextField, 'Title for https://cold.example/page'),
+        reason:
+            'cold-start share must open the picker, not just sit on the home screen');
+    expect(
+        find.widgetWithText(TextField, 'Title for https://cold.example/page'),
         findsOneWidget);
     expect(shareSource.resetCalled, isTrue);
   });
 
-  testWidgets('multi-file share creates one task and uploads N attachments', (tester) async {
+  testWidgets('multi-file share creates one task and uploads N attachments',
+      (tester) async {
     final shareSource = _FakeShareIntentSource();
     final repository = _FakeRepository();
     addTearDown(shareSource.dispose);
 
-    await tester.pumpWidget(_buildApp(shareSource: shareSource, repository: repository));
+    await tester.pumpWidget(
+        _buildApp(shareSource: shareSource, repository: repository));
     await _settle(tester);
 
     shareSource.fireFileShare([
@@ -320,12 +348,14 @@ void main() {
     expect(find.text('3 attachments uploaded'), findsOneWidget);
   });
 
-  testWidgets('attachment upload failure shows error and Retry recovers', (tester) async {
+  testWidgets('attachment upload failure shows error and Retry recovers',
+      (tester) async {
     final shareSource = _FakeShareIntentSource();
     final repository = _FakeRepository()..failNextUploads(1);
     addTearDown(shareSource.dispose);
 
-    await tester.pumpWidget(_buildApp(shareSource: shareSource, repository: repository));
+    await tester.pumpWidget(
+        _buildApp(shareSource: shareSource, repository: repository));
     await _settle(tester);
 
     shareSource.fireFileShare(['/tmp/IMG.jpg']);
@@ -345,10 +375,12 @@ void main() {
         reason: 'after a successful retry the error banner must clear');
     expect(find.text('1 attachment uploaded'), findsOneWidget);
     expect(repository.uploadedPathsByCall, hasLength(2),
-        reason: 'one failed call + one retry call = 2 uploadAttachments invocations');
+        reason:
+            'one failed call + one retry call = 2 uploadAttachments invocations');
   });
 
-  testWidgets('redirects share to setup screen when not configured', (tester) async {
+  testWidgets('redirects share to setup screen when not configured',
+      (tester) async {
     final shareSource = _FakeShareIntentSource();
     final repository = _FakeRepository();
     addTearDown(shareSource.dispose);

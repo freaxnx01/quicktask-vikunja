@@ -8,7 +8,8 @@ class VikunjaApi {
   final SecureStorage _storage;
   final http.Client _client;
 
-  VikunjaApi(this._storage, {http.Client? client}) : _client = client ?? http.Client();
+  VikunjaApi(this._storage, {http.Client? client})
+      : _client = client ?? http.Client();
 
   Future<Map<String, String>> _headers() async {
     final token = await _storage.apiToken;
@@ -51,11 +52,13 @@ class VikunjaApi {
     return TaskResponse.fromJson(json.decode(response.body));
   }
 
-  Future<List<TaskSummary>> getRecentProjectTasks(int projectId, {int limit = 10}) async {
+  Future<List<TaskSummary>> getRecentProjectTasks(int projectId,
+      {int limit = 10}) async {
     final base = await _baseUrl();
     final headers = await _headers();
     final response = await _client.get(
-      Uri.parse('$base/api/v1/projects/$projectId/tasks?per_page=$limit&sort_by[]=created&order_by[]=desc&filter=done=false'),
+      Uri.parse(
+          '$base/api/v1/projects/$projectId/tasks?per_page=$limit&sort_by[]=created&order_by[]=desc&filter=done=false'),
       headers: headers,
     );
     if (response.statusCode != 200) {
@@ -81,7 +84,8 @@ class VikunjaApi {
     final streamed = await request.send();
     if (streamed.statusCode != 200 && streamed.statusCode != 201) {
       final body = await streamed.stream.bytesToString();
-      throw Exception('Attachment upload failed (${streamed.statusCode}): $body');
+      throw Exception(
+          'Attachment upload failed (${streamed.statusCode}): $body');
     }
   }
 

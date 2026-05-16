@@ -11,7 +11,8 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('addEntry inserts new entries at the front (most-recent-first)', () async {
+  test('addEntry inserts new entries at the front (most-recent-first)',
+      () async {
     final history = TaskHistory();
     await history.addEntry(_entry('first', 1));
     await history.addEntry(_entry('second', 2));

@@ -73,7 +73,8 @@ class _HomePageState extends State<HomePage> {
   late final VikunjaRepository _repository =
       widget.repository ?? VikunjaRepository(VikunjaApi(_storage));
   late final TitleFetcher _titleFetcher = widget.titleFetcher ?? TitleFetcher();
-  late final ProjectUsageTracker _usageTracker = widget.usageTracker ?? ProjectUsageTracker();
+  late final ProjectUsageTracker _usageTracker =
+      widget.usageTracker ?? ProjectUsageTracker();
   late final TaskHistory _taskHistory = widget.taskHistory ?? TaskHistory();
   late final ShareIntentSource _shareSource =
       widget.shareSource ?? const DefaultShareIntentSource();

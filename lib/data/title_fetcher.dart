@@ -29,7 +29,8 @@ class TitleFetcher {
     }
   }
 
-  Future<ResolvedTask> resolveTask(String sharedText, String? extraSubject) async {
+  Future<ResolvedTask> resolveTask(
+      String sharedText, String? extraSubject) async {
     final text = sharedText.trim();
     if (!isUrl(text)) return ResolvedTask(title: text);
 

@@ -16,10 +16,7 @@ class ProjectUsageTracker {
     final data = _getData(prefs);
     final entries = data.entries.toList()
       ..sort((a, b) => (b.value as int).compareTo(a.value as int));
-    return entries
-        .take(limit)
-        .map((e) => int.parse(e.key))
-        .toList();
+    return entries.take(limit).map((e) => int.parse(e.key)).toList();
   }
 
   Map<String, dynamic> _getData(SharedPreferences prefs) {

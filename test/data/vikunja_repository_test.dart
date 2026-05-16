@@ -20,12 +20,14 @@ VikunjaRepository _repoWith(MockClient client) =>
 
 List<Map<String, Object>> _fullBatch(int startId) => List.generate(
       100,
-      (i) => {'id': startId + i, 'title': 'P${startId + i}', 'is_archived': false},
+      (i) =>
+          {'id': startId + i, 'title': 'P${startId + i}', 'is_archived': false},
     );
 
 void main() {
   group('VikunjaRepository.getAllProjects', () {
-    test('stops after the first page when the batch is already partial', () async {
+    test('stops after the first page when the batch is already partial',
+        () async {
       var calls = 0;
       final client = MockClient((req) async {
         calls++;
@@ -39,11 +41,14 @@ void main() {
 
       final all = await _repoWith(client).getAllProjects();
 
-      expect(calls, 1, reason: 'a partial first page must not trigger another fetch');
+      expect(calls, 1,
+          reason: 'a partial first page must not trigger another fetch');
       expect(all.map((p) => p.id), [1]);
     });
 
-    test('keeps paginating while full batches come back, stops on the partial one', () async {
+    test(
+        'keeps paginating while full batches come back, stops on the partial one',
+        () async {
       final pages = <int>[];
       final client = MockClient((req) async {
         final page = int.parse(req.url.queryParameters['page']!);
@@ -75,9 +80,11 @@ void main() {
       final seenPerPage = <String?>[];
       final client = MockClient((req) async {
         seenPerPage.add(req.url.queryParameters['per_page']);
-        return http.Response(json.encode([
-          {'id': 1, 'title': 'P1', 'is_archived': false},
-        ]), 200);
+        return http.Response(
+            json.encode([
+              {'id': 1, 'title': 'P1', 'is_archived': false},
+            ]),
+            200);
       });
 
       await _repoWith(client).getAllProjects();

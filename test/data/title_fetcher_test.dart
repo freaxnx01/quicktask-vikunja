@@ -25,7 +25,8 @@ void main() {
       expect(fetcher.isUrl('Buy milk'), isFalse);
       expect(fetcher.isUrl(''), isFalse);
       expect(fetcher.isUrl('example.com'), isFalse,
-          reason: 'requires explicit scheme so plain text is not misclassified');
+          reason:
+              'requires explicit scheme so plain text is not misclassified');
       expect(fetcher.isUrl('ftp://example.com'), isFalse,
           reason: 'only http(s) is treated as a fetchable URL');
     });
@@ -37,7 +38,8 @@ void main() {
 
   group('shortenUrl', () {
     test('returns host without leading www.', () {
-      expect(TitleFetcher.shortenUrl('https://www.example.com/foo'), 'example.com');
+      expect(TitleFetcher.shortenUrl('https://www.example.com/foo'),
+          'example.com');
       expect(TitleFetcher.shortenUrl('https://www.sub.example.com/foo'),
           'sub.example.com');
     });

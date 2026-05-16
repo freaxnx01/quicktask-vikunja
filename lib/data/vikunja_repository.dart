@@ -21,11 +21,14 @@ class VikunjaRepository {
     return allProjects.where((p) => !p.isArchived).toList();
   }
 
-  Future<TaskResponse> createTask(int projectId, String title, {String? description}) {
-    return _api.createTask(projectId, CreateTaskRequest(title: title, description: description));
+  Future<TaskResponse> createTask(int projectId, String title,
+      {String? description}) {
+    return _api.createTask(
+        projectId, CreateTaskRequest(title: title, description: description));
   }
 
-  Future<List<TaskSummary>> getRecentProjectTasks(int projectId, {int limit = 10}) {
+  Future<List<TaskSummary>> getRecentProjectTasks(int projectId,
+      {int limit = 10}) {
     return _api.getRecentProjectTasks(projectId, limit: limit);
   }
 

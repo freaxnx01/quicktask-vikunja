@@ -44,7 +44,8 @@ class _RecentTasksScreenState extends State<RecentTasksScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear task history?'),
-        content: const Text('This will remove all entries from the local list. Tasks in Vikunja are not affected.'),
+        content: const Text(
+            'This will remove all entries from the local list. Tasks in Vikunja are not affected.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -142,14 +143,17 @@ class _RecentTasksScreenState extends State<RecentTasksScreen> {
                       child: Text(
                         'No tasks yet.\nShare a URL or text from another app, or tap + to add one.',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                         textAlign: TextAlign.center,
                       ),
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: _entries.length,
                     itemBuilder: (context, index) {
                       final entry = _entries[index];
@@ -170,16 +174,26 @@ class _RecentTasksScreenState extends State<RecentTasksScreen> {
                                 const SizedBox(height: 2),
                                 Text(
                                   TitleFetcher.shortenUrl(entry.url!),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Theme.of(context).colorScheme.primary,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                 ),
                               ],
                               const SizedBox(height: 4),
                               Text(
                                 '${entry.projectName} • ${_formatRelativeTime(entry.timestamp)}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                     ),
                               ),
                             ],

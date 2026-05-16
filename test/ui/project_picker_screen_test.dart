@@ -41,14 +41,17 @@ class _FakeRepo extends VikunjaRepository {
   Future<List<Project>> getAllProjects() async => projects;
 
   @override
-  Future<TaskResponse> createTask(int projectId, String title, {String? description}) async {
+  Future<TaskResponse> createTask(int projectId, String title,
+      {String? description}) async {
     createCalls++;
     if (failCreate) throw Exception('fail');
     return TaskResponse(id: 1, title: title);
   }
 
   @override
-  Future<List<TaskSummary>> getRecentProjectTasks(int projectId, {int limit = 10}) async => [];
+  Future<List<TaskSummary>> getRecentProjectTasks(int projectId,
+          {int limit = 10}) async =>
+      [];
 
   @override
   Future<void> uploadAttachments(int taskId, List<String> filePaths) async {}
@@ -103,7 +106,8 @@ void main() {
     expect(find.text('Beta'), findsOneWidget);
     expect(find.text('Gamma'), findsOneWidget);
 
-    await tester.enterText(find.widgetWithText(TextField, 'Search projects...'), 'be');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Search projects...'), 'be');
     await tester.pump();
 
     expect(find.text('Beta'), findsOneWidget);
@@ -145,7 +149,8 @@ void main() {
     expect(find.text('Task title cannot be empty'), findsOneWidget);
   });
 
-  testWidgets('favorites appear in their own section above Recent and All', (tester) async {
+  testWidgets('favorites appear in their own section above Recent and All',
+      (tester) async {
     final repo = _FakeRepo(projects: [
       Project(id: 1, title: 'Alpha'),
       Project(id: 2, title: 'Beta'),
@@ -156,7 +161,8 @@ void main() {
     final usage = ProjectUsageTracker();
     await usage.recordUsage(2); // Beta is recent
 
-    await tester.pumpWidget(_wrap(repo, favorites: favorites, usageTracker: usage));
+    await tester
+        .pumpWidget(_wrap(repo, favorites: favorites, usageTracker: usage));
     await tester.pumpAndSettle();
 
     expect(_headerOrder(tester), ['Favorites', 'Recent', 'All Projects']);
@@ -167,7 +173,8 @@ void main() {
     expect(find.widgetWithText(ListTile, 'Alpha'), findsOneWidget);
   });
 
-  testWidgets('favorite is not duplicated when it is also recent', (tester) async {
+  testWidgets('favorite is not duplicated when it is also recent',
+      (tester) async {
     final repo = _FakeRepo(projects: [
       Project(id: 1, title: 'Inbox'),
       Project(id: 2, title: 'Other'),
@@ -177,7 +184,8 @@ void main() {
     final usage = ProjectUsageTracker();
     await usage.recordUsage(1); // Inbox is both favorite AND recent
 
-    await tester.pumpWidget(_wrap(repo, favorites: favorites, usageTracker: usage));
+    await tester
+        .pumpWidget(_wrap(repo, favorites: favorites, usageTracker: usage));
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(ListTile, 'Inbox'), findsOneWidget,
@@ -186,7 +194,8 @@ void main() {
     expect(_headerOrder(tester), ['Favorites', 'All Projects']);
   });
 
-  testWidgets('tapping star moves a project into Favorites immediately', (tester) async {
+  testWidgets('tapping star moves a project into Favorites immediately',
+      (tester) async {
     final repo = _FakeRepo(projects: [
       Project(id: 1, title: 'Alpha'),
       Project(id: 2, title: 'Beta'),
@@ -211,7 +220,8 @@ void main() {
     expect(await ProjectFavorites().getFavoriteIds(), {2});
   });
 
-  testWidgets('tapping star twice unfavorites and returns project to All', (tester) async {
+  testWidgets('tapping star twice unfavorites and returns project to All',
+      (tester) async {
     final repo = _FakeRepo(projects: [Project(id: 1, title: 'Inbox')]);
     final favorites = ProjectFavorites();
     await favorites.toggle(1);
@@ -228,7 +238,8 @@ void main() {
     expect(await favorites.getFavoriteIds(), isEmpty);
   });
 
-  testWidgets('tapping a project row (not the star) still creates the task', (tester) async {
+  testWidgets('tapping a project row (not the star) still creates the task',
+      (tester) async {
     final repo = _FakeRepo(projects: [Project(id: 1, title: 'Inbox')]);
     final favorites = ProjectFavorites();
     await favorites.toggle(1);
@@ -255,14 +266,16 @@ void main() {
     await tester.pumpWidget(_wrap(repo, favorites: favorites));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.widgetWithText(TextField, 'Search projects...'), 'inb');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Search projects...'), 'inb');
     await tester.pump();
 
     expect(find.widgetWithText(ListTile, 'Inbox'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Archive'), findsNothing);
   });
 
-  testWidgets('createTask failure keeps user on picker with error message', (tester) async {
+  testWidgets('createTask failure keeps user on picker with error message',
+      (tester) async {
     final repo = _FakeRepo(
       projects: [Project(id: 1, title: 'Inbox')],
       failCreate: true,
@@ -277,7 +290,9 @@ void main() {
     expect(find.textContaining('Failed to create task'), findsOneWidget);
   });
 
-  testWidgets('multi-line input shows batch choice dialog when a project is tapped', (tester) async {
+  testWidgets(
+      'multi-line input shows batch choice dialog when a project is tapped',
+      (tester) async {
     final repo = _FakeRepo(projects: [Project(id: 1, title: 'Inbox')]);
     await tester.pumpWidget(_wrap(repo, text: 'Line 1\nLine 2\nLine 3'));
     await tester.pumpAndSettle();
@@ -292,7 +307,9 @@ void main() {
     expect(repo.createCalls, 0);
   });
 
-  testWidgets('choosing "Keep as single task" creates one task with full multi-line title', (tester) async {
+  testWidgets(
+      'choosing "Keep as single task" creates one task with full multi-line title',
+      (tester) async {
     final repo = _FakeRepo(projects: [Project(id: 1, title: 'Inbox')]);
     await tester.pumpWidget(_wrap(repo, text: 'Line 1\nLine 2'));
     await tester.pumpAndSettle();
@@ -309,7 +326,9 @@ void main() {
     expect(find.text('2 tasks created'), findsNothing);
   });
 
-  testWidgets('choosing batch mode creates one task per line and shows count confirmation', (tester) async {
+  testWidgets(
+      'choosing batch mode creates one task per line and shows count confirmation',
+      (tester) async {
     final repo = _FakeRepo(projects: [Project(id: 1, title: 'Inbox')]);
     await tester.pumpWidget(_wrap(repo, text: 'Line 1\nLine 2'));
     await tester.pumpAndSettle();
@@ -326,7 +345,8 @@ void main() {
     expect(find.text('2 tasks created'), findsOneWidget);
   });
 
-  testWidgets('single-line input skips batch dialog and creates task directly', (tester) async {
+  testWidgets('single-line input skips batch dialog and creates task directly',
+      (tester) async {
     final repo = _FakeRepo(projects: [Project(id: 1, title: 'Inbox')]);
     await tester.pumpWidget(_wrap(repo, text: 'Only one task'));
     await tester.pumpAndSettle();
@@ -338,7 +358,8 @@ void main() {
     expect(repo.createCalls, 1);
   });
 
-  testWidgets('more than 20 lines shows a warning and does not create any task', (tester) async {
+  testWidgets('more than 20 lines shows a warning and does not create any task',
+      (tester) async {
     final lines = List.generate(21, (i) => 'Line ${i + 1}').join('\n');
     final repo = _FakeRepo(projects: [Project(id: 1, title: 'Inbox')]);
     await tester.pumpWidget(_wrap(repo, text: lines));

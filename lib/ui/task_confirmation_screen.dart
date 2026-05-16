@@ -48,7 +48,8 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
 
   Future<void> _load() async {
     try {
-      final tasks = await widget.repository.getRecentProjectTasks(widget.projectId, limit: 10);
+      final tasks = await widget.repository
+          .getRecentProjectTasks(widget.projectId, limit: 10);
       if (mounted) setState(() => _tasks = tasks);
     } catch (e) {
       if (mounted) setState(() => _error = 'Failed to load tasks: $e');
@@ -74,16 +75,21 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
                     children: [
                       Icon(Icons.check_circle, color: scheme.primary),
                       const SizedBox(width: 8),
-                      Text('Task created', style: Theme.of(context).textTheme.titleMedium),
+                      Text('Task created',
+                          style: Theme.of(context).textTheme.titleMedium),
                     ],
                   ),
                 ),
                 if (widget.attachmentCount > 0) _buildAttachmentStatus(scheme),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: Text(
                     'Last 10 open tasks in this project',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelMedium
+                        ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ),
                 Expanded(child: _buildList(scheme)),
@@ -122,7 +128,8 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             itemCount: results.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, i) => _taskTile(scheme, results[i], isNew: true),
+            itemBuilder: (context, i) =>
+                _taskTile(scheme, results[i], isNew: true),
           ),
         ),
         Padding(
@@ -212,7 +219,10 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
             TextButton(
               onPressed: _isRetrying ? null : _retry,
               child: _isRetrying
-                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2))
                   : const Text('Retry'),
             ),
         ],
@@ -248,7 +258,8 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
       ),
       title: Text(
         title,
-        style: TextStyle(fontWeight: isNew ? FontWeight.bold : FontWeight.normal),
+        style:
+            TextStyle(fontWeight: isNew ? FontWeight.bold : FontWeight.normal),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),

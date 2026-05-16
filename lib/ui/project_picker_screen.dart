@@ -38,7 +38,8 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   final _titleController = TextEditingController();
   final _focusNode = FocusNode();
 
-  late final ProjectFavorites _favorites = widget.favorites ?? ProjectFavorites();
+  late final ProjectFavorites _favorites =
+      widget.favorites ?? ProjectFavorites();
 
   String? _resolvedUrl;
   List<Project> _allProjects = [];
@@ -100,7 +101,8 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
     final query = _searchController.text.toLowerCase();
     var projects = _allProjects;
     if (query.isNotEmpty) {
-      projects = projects.where((p) => p.title.toLowerCase().contains(query)).toList();
+      projects =
+          projects.where((p) => p.title.toLowerCase().contains(query)).toList();
     }
     return projects;
   }
@@ -108,7 +110,8 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
   List<Project> get _favoriteProjects {
     final favorites =
         _filteredProjects.where((p) => _favoriteIds.contains(p.id)).toList();
-    favorites.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    favorites
+        .sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
     return favorites;
   }
 
@@ -118,9 +121,11 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
 
   List<Project> get _otherProjects {
     final other = _filteredProjects
-        .where((p) => !_favoriteIds.contains(p.id) && !_recentIds.contains(p.id))
+        .where(
+            (p) => !_favoriteIds.contains(p.id) && !_recentIds.contains(p.id))
         .toList();
-    other.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    other
+        .sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
     return other;
   }
 
@@ -199,7 +204,8 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
               attachmentError: attachmentError,
               retryAttachments: attachmentError == null
                   ? null
-                  : () => widget.repository.uploadAttachments(created.id, filePaths),
+                  : () => widget.repository
+                      .uploadAttachments(created.id, filePaths),
             ),
           ),
         );
@@ -343,7 +349,8 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
                     Text(
                       TitleFetcher.shortenUrl(_resolvedUrl!),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
                   ],
@@ -355,7 +362,8 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
                       children: widget.shared.files
                           .map((f) => Chip(
                                 avatar: const Icon(Icons.attach_file, size: 16),
-                                label: Text(f.name, overflow: TextOverflow.ellipsis),
+                                label: Text(f.name,
+                                    overflow: TextOverflow.ellipsis),
                                 visualDensity: VisualDensity.compact,
                               ))
                           .toList(),
@@ -396,7 +404,8 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          child: Text(_error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error)),
         ),
       );
     }
@@ -412,7 +421,9 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                child: Text(_error!,
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
               ),
             if (favorites.isNotEmpty) ...[
               _sectionHeader('Favorites'),
@@ -428,8 +439,7 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
             ],
           ],
         ),
-        if (_isCreating)
-          const Center(child: CircularProgressIndicator()),
+        if (_isCreating) const Center(child: CircularProgressIndicator()),
       ],
     );
   }
