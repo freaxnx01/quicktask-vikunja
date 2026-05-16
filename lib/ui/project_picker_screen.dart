@@ -219,6 +219,7 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('$count lines detected'),
+        content: const Text('How would you like to create this?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -257,12 +258,12 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
 
   Future<void> _runBatchFlow(Project project, List<String> lines) async {
     setState(() => _isCreating = true);
+    final createdTitles = <String>[];
     try {
       final resolved = await Future.wait(
         lines.map((l) => widget.titleFetcher.resolveTask(l, null)),
       );
 
-      final createdTitles = <String>[];
       for (final task in resolved) {
         final created = await widget.repository.createTask(
           project.id,
@@ -297,7 +298,9 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       if (mounted) {
         setState(() {
           _isCreating = false;
-          _error = 'Failed to create tasks: $e';
+          _error = createdTitles.isEmpty
+              ? 'Failed to create tasks: $e'
+              : 'Failed after creating ${createdTitles.length} of ${lines.length} tasks: $e';
         });
       }
     }
