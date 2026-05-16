@@ -18,6 +18,8 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
       - run: bash tool/build.sh apk
       - uses: actions/upload-artifact@v4
         with:
@@ -36,6 +38,8 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
       - run: bash tool/build.sh windows
       - name: Package Windows release
         shell: pwsh
