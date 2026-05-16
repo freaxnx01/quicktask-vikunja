@@ -31,8 +31,9 @@ class SecureStorage {
 
   String _normalizeUrl(String url) {
     var trimmed = url.trim();
-    if (trimmed.endsWith('/'))
+    if (trimmed.endsWith('/')) {
       trimmed = trimmed.substring(0, trimmed.length - 1);
+    }
     if (!trimmed.contains('://')) trimmed = 'https://$trimmed';
     return trimmed;
   }
