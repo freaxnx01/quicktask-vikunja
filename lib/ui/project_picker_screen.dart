@@ -140,6 +140,25 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
       setState(() => _error = 'Task title cannot be empty');
       return;
     }
+
+    final lines = title
+        .split('\n')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+    if (lines.length > 20) {
+      await _showTooManyLinesWarning();
+      return;
+    }
+    if (lines.length >= 2) {
+      final useBatch = await _showBatchChoiceDialog(lines.length);
+      if (useBatch == null) return;
+      if (useBatch) {
+        await _runBatchFlow(project, lines);
+        return;
+      }
+    }
+
     setState(() => _isCreating = true);
 
     try {
@@ -190,6 +209,95 @@ class _ProjectPickerScreenState extends State<ProjectPickerScreen> {
         setState(() {
           _isCreating = false;
           _error = 'Failed to create task: $e';
+        });
+      }
+    }
+  }
+
+  Future<bool?> _showBatchChoiceDialog(int count) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('$count lines detected'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Keep as single task'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text('Create $count separate tasks'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showTooManyLinesWarning() {
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Too many lines'),
+        content: const Text(
+          'Batch mode supports up to 20 lines. Please trim your input.',
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _runBatchFlow(Project project, List<String> lines) async {
+    setState(() => _isCreating = true);
+    try {
+      final resolved = await Future.wait(
+        lines.map((l) => widget.titleFetcher.resolveTask(l, null)),
+      );
+
+      final createdTitles = <String>[];
+      for (final task in resolved) {
+        final created = await widget.repository.createTask(
+          project.id,
+          task.title,
+          description: task.url,
+        );
+        await widget.taskHistory.addEntry(TaskHistoryEntry(
+          taskName: task.title,
+          projectName: project.title,
+          url: task.url,
+          timestamp: DateTime.now().millisecondsSinceEpoch,
+        ));
+        createdTitles.add(created.title);
+      }
+      await widget.usageTracker.recordUsage(project.id);
+
+      if (!mounted) return;
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => TaskConfirmationScreen(
+            projectId: project.id,
+            projectName: project.title,
+            createdTaskId: 0,
+            createdTaskTitle: '',
+            repository: widget.repository,
+            onDone: widget.onDone,
+            batchResults: createdTitles,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isCreating = false;
+          _error = 'Failed to create tasks: $e';
         });
       }
     }
