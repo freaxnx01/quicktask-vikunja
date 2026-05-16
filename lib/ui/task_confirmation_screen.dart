@@ -13,6 +13,8 @@ class TaskConfirmationScreen extends StatefulWidget {
   final int attachmentCount;
   final String? attachmentError;
   final Future<void> Function()? retryAttachments;
+  // Non-null → batch mode: skip recent-task load and show list of created titles.
+  final List<String>? batchResults;
 
   const TaskConfirmationScreen({
     super.key,
@@ -25,6 +27,7 @@ class TaskConfirmationScreen extends StatefulWidget {
     this.attachmentCount = 0,
     this.attachmentError,
     this.retryAttachments,
+    this.batchResults,
   });
 
   @override
@@ -40,7 +43,7 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    if (widget.batchResults == null) _load();
   }
 
   Future<void> _load() async {
@@ -60,37 +63,76 @@ class _TaskConfirmationScreenState extends State<TaskConfirmationScreen> {
         title: Text('Added to ${widget.projectName}'),
       ),
       bottomNavigationBar: const VersionFooter(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Row(
+      body: widget.batchResults != null
+          ? _buildBatchBody(scheme)
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.check_circle, color: scheme.primary),
-                const SizedBox(width: 8),
-                Text('Task created', style: Theme.of(context).textTheme.titleMedium),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: scheme.primary),
+                      const SizedBox(width: 8),
+                      Text('Task created', style: Theme.of(context).textTheme.titleMedium),
+                    ],
+                  ),
+                ),
+                if (widget.attachmentCount > 0) _buildAttachmentStatus(scheme),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Text(
+                    'Last 10 open tasks in this project',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ),
+                Expanded(child: _buildList(scheme)),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: FilledButton(
+                    onPressed: widget.onDone,
+                    child: const Text('Done'),
+                  ),
+                ),
               ],
             ),
+    );
+  }
+
+  Widget _buildBatchBody(ColorScheme scheme) {
+    final results = widget.batchResults!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Row(
+            children: [
+              Icon(Icons.check_circle, color: scheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                '${results.length} tasks created',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
           ),
-          if (widget.attachmentCount > 0) _buildAttachmentStatus(scheme),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Text(
-              'Last 10 open tasks in this project',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
-            ),
+        ),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemCount: results.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, i) => _taskTile(scheme, results[i], isNew: true),
           ),
-          Expanded(child: _buildList(scheme)),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: FilledButton(
-              onPressed: widget.onDone,
-              child: const Text('Done'),
-            ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: FilledButton(
+            onPressed: widget.onDone,
+            child: const Text('Done'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
