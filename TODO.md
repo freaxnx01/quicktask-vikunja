@@ -16,7 +16,7 @@ Pending work queued for Claude to pick up in a future session. Ordered by priori
 
 ## CLAUDE.md follow-ups (from PR #8 review)
 
-- [ ] `make push PHONE_IP=...` example in `CLAUDE.md` is misleading — the `Makefile` doesn't consume `PHONE_IP` as a make variable; `tool/push-to-phone.sh` handles it. Either document the env-var contract the script actually expects, or drop `PHONE_IP=` from the example.
+- [x] `make push PHONE_IP=...` example was misleading — fixed by justfile migration: now documented as `PHONE_IP=... just push` (env-var prefix, which `tool/push-to-phone.sh` actually consumes).
 - [ ] Add one line to `CLAUDE.md` on local dev setup: where does the agent get a Vikunja base URL / API token to exercise `SetupScreen` or run integration-style tests? (e.g. "Run a throwaway Vikunja via docker-compose, or ask the maintainer for a dev token.") Without this a 6-month-later agent is stuck.
 - [ ] Mention `lib/data/vikunja_repository.dart` in the data-layer description (currently lists API client / storage / history / title fetcher but not the repository wrapper).
 - [ ] Note that `provider: ^6.1.2` is in `pubspec.yaml` but not wired anywhere yet — so agents don't assume DI exists.

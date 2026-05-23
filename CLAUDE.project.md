@@ -30,8 +30,8 @@ Open items not yet tracked as issues live in `TODO.md` at the repo root. At the 
 
 ## Project-specific commands
 
-- `make apk` → release APK at `build/app/outputs/flutter-apk/`
-- `make push PHONE_IP=192.168.x.y` → send APK to phone via LocalSend
+- `just apk` → release APK at `build/app/outputs/flutter-apk/`
+- `PHONE_IP=192.168.x.y` just push → send APK to phone via LocalSend
 
 ## Docs layout (project-specific)
 
