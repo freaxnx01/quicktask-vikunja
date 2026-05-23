@@ -87,15 +87,15 @@ The Vikunja instance URL and API token are stored in `flutter_secure_storage` (A
 
 ## Build and run
 
-See the `Makefile` for all targets. The key ones:
+See the `justfile` for all targets. The key ones:
 
 ```bash
 flutter pub get          # after checkout or pubspec changes
 flutter run              # development build on a connected device
-make apk                 # release APK → build/app/outputs/flutter-apk/app-release.apk
-make windows             # release Windows build
+just apk                 # release APK → build/app/outputs/flutter-apk/app-release.apk
+just windows             # release Windows build
 flutter analyze          # must pass before commit
 flutter test             # must pass before commit
 ```
 
-Always use `make apk` / `make windows` for release builds — not `flutter build` directly. The `tool/build.sh` script stamps `lib/build_info.dart` with the current version and UTC timestamp before building; calling `flutter build` directly leaves that file stale.
+Always use `just apk` / `just windows` for release builds — not `flutter build` directly. The `tool/build.sh` script stamps `lib/build_info.dart` with the current version and UTC timestamp before building; calling `flutter build` directly leaves that file stale.
