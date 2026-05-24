@@ -11,13 +11,13 @@ PHONE_IP="${PHONE_IP:-}"
 if [[ -z "$PHONE_IP" ]]; then
   echo "ERROR: PHONE_IP is not set." >&2
   echo "  Open LocalSend on your phone, tap 'Receive', and read the IP shown." >&2
-  echo "  Then: PHONE_IP=192.168.x.y make push" >&2
+  echo "  Then: PHONE_IP=192.168.x.y just push" >&2
   exit 1
 fi
 
 if [[ ! -f "$APK" ]]; then
   echo "ERROR: APK not found at $APK" >&2
-  echo "  Run 'make apk' first." >&2
+  echo "  Run 'just apk' first." >&2
   exit 1
 fi
 
