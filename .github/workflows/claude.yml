@@ -26,6 +26,10 @@ jobs:
     uses: freaxnx01/agent-pipeline/.github/workflows/claude-implement.yml@v1
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      # Used only when an issue resolves to the OpenCode agent
+      # (agent:opencode label). required: false at the workflow boundary, so
+      # an empty value is harmless for normal Claude runs.
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
     with:
       issue-number: ${{ github.event.issue.number || inputs.issue-number }}
       runner-labels: '["ubuntu-latest"]'      # public repo → GitHub-hosted only
