@@ -1,0 +1,30 @@
+name: Claude
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:            # lets retry-dispatch.sh re-kick a run
+    inputs:
+      issue-number:
+        description: Issue number to implement
+        type: number
+        required: true
+
+jobs:
+  claude:
+    if: >-
+      (github.event_name == 'issues' && github.event.label.name == 'ai-implement')
+      || github.event_name == 'workflow_dispatch'
+    uses: freaxnx01/agent-pipeline/.github/workflows/claude-implement.yml@v1
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+    with:
+      issue-number: ${{ github.event.issue.number || inputs.issue-number }}
+      runner-labels: '["ubuntu-latest"]'      # public repo → GitHub-hosted only
+      default-model: claude-opus-4-7
+      # ── REQUIRED for agent-pipeline consumers ──
+      # The reusable workflow defaults pipeline-repo/ref to
+      # freaxnx01/claude-pipeline@main (the project's original name). Override
+      # both so the shared-scripts cross-repo checkout resolves to THIS pipeline.
+      pipeline-repo: freaxnx01/agent-pipeline
+      pipeline-ref: v1
+      # auto-review omitted → draft-PR-only posture (safe first run)
