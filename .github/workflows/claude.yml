@@ -9,6 +9,15 @@ on:
         type: number
         required: true
 
+# The reusable workflow's jobs request contents/pull-requests/issues: write.
+# A reusable workflow cannot be granted more than its caller, and this repo's
+# default GITHUB_TOKEN is read-only, so the caller must grant these explicitly
+# or the run fails at startup before any job runs.
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
 jobs:
   claude:
     if: >-
