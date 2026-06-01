@@ -33,7 +33,7 @@ jobs:
     with:
       issue-number: ${{ github.event.issue.number || inputs.issue-number }}
       runner-labels: '["ubuntu-latest"]'      # public repo → GitHub-hosted only
-      default-model: google/gemma-4-31b-it   # TEMPORARY: OpenCode/Gemma smoke test (revert to claude-opus-4-7)
+      default-model: claude-opus-4-7
       # ── REQUIRED for agent-pipeline consumers ──
       # The reusable workflow defaults pipeline-repo/ref to
       # freaxnx01/claude-pipeline@main (the project's original name). Override
