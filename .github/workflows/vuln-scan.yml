@@ -1,0 +1,26 @@
+name: Vulnerability Scan
+
+# Dependency-vulnerability gate for the auto-merge safety envelope
+# (agent-pipeline ADR-002 gate 5). OSV-Scanner reads pubspec.lock and fails the
+# job on any known-vulnerable dependency, so it can be marked a required status
+# check on `main` and block auto-merge of a vulnerable bump.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  osv-scan:
+    name: osv-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+        with:
+          scan-args: |-
+            --lockfile=pubspec.lock
