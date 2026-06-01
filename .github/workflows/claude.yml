@@ -23,7 +23,7 @@ jobs:
     if: >-
       (github.event_name == 'issues' && github.event.label.name == 'ai-implement')
       || github.event_name == 'workflow_dispatch'
-    uses: freaxnx01/agent-pipeline/.github/workflows/claude-implement.yml@main  # TEMP capture
+    uses: freaxnx01/agent-pipeline/.github/workflows/claude-implement.yml@v1
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       # Used only when an issue resolves to the OpenCode agent
@@ -33,13 +33,13 @@ jobs:
     with:
       issue-number: ${{ github.event.issue.number || inputs.issue-number }}
       runner-labels: '["ubuntu-latest"]'      # public repo → GitHub-hosted only
-      default-model: google/gemma-4-31b-it   # TEMP capture
+      default-model: claude-opus-4-7
       # ── REQUIRED for agent-pipeline consumers ──
       # The reusable workflow defaults pipeline-repo/ref to
       # freaxnx01/claude-pipeline@main (the project's original name). Override
       # both so the shared-scripts cross-repo checkout resolves to THIS pipeline.
       pipeline-repo: freaxnx01/agent-pipeline
-      pipeline-ref: main   # TEMP capture
+      pipeline-ref: v1
       # auto-review intentionally omitted → draft-PR-only posture. Full
       # auto-merge needs a GitHub App/PAT for PR creation (the ambient
       # GITHUB_TOKEN's PRs don't trigger required checks and don't match the
