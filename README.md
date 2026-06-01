@@ -3,6 +3,7 @@
 A new Flutter project.
 
 Contributing? See [CONTRIBUTING.md](CONTRIBUTING.md).
+Reporting a security issue? See [SECURITY.md](SECURITY.md).
 
 ## Getting Started
 
