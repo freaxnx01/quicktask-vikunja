@@ -4,6 +4,7 @@ A new Flutter project.
 
 Contributing? See [CONTRIBUTING.md](CONTRIBUTING.md).
 Reporting a security issue? See [SECURITY.md](SECURITY.md).
+Please review our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Getting Started
 
