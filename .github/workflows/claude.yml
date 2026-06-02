@@ -23,15 +23,13 @@ jobs:
     if: >-
       (github.event_name == 'issues' && github.event.label.name == 'ai-implement')
       || github.event_name == 'workflow_dispatch'
-    uses: freaxnx01/agent-pipeline/.github/workflows/claude-implement.yml@main  # TEMP verify
+    uses: freaxnx01/agent-pipeline/.github/workflows/claude-implement.yml@v1
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       # Used only when an issue resolves to the OpenCode agent
       # (agent:opencode label). required: false at the workflow boundary, so
       # an empty value is harmless for normal Claude runs.
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      PIPELINE_APP_ID: ${{ secrets.PIPELINE_APP_ID }}
-      PIPELINE_APP_PRIVATE_KEY: ${{ secrets.PIPELINE_APP_PRIVATE_KEY }}
     with:
       issue-number: ${{ github.event.issue.number || inputs.issue-number }}
       runner-labels: '["ubuntu-latest"]'      # public repo → GitHub-hosted only
@@ -41,7 +39,7 @@ jobs:
       # freaxnx01/claude-pipeline@main (the project's original name). Override
       # both so the shared-scripts cross-repo checkout resolves to THIS pipeline.
       pipeline-repo: freaxnx01/agent-pipeline
-      pipeline-ref: main   # TEMP verify
-      # TEMP verify: auto-review + App-authored PRs (agent-pipeline #70).
-      auto-review: true
-      pipeline-author-allowlist: quicktask-pipeline-bot[bot]
+      pipeline-ref: v1
+      # auto-review intentionally omitted → draft-PR-only posture. Auto-merge
+      # wiring is pre-staged in PR #54; go-live needs review-pr JSON robustness
+      # (agent-pipeline #72) + v1 promoted to include #70.
