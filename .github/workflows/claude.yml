@@ -30,6 +30,11 @@ jobs:
       # (agent:opencode label). required: false at the workflow boundary, so
       # an empty value is harmless for normal Claude runs.
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      # GitHub App (quicktask-pipeline-bot) used for PR creation so PRs trigger
+      # required checks (the GITHUB_TOKEN can't) — the auto-merge prerequisite.
+      # required: false; unset → falls back to GITHUB_TOKEN (draft-only).
+      PIPELINE_APP_ID: ${{ secrets.PIPELINE_APP_ID }}
+      PIPELINE_APP_PRIVATE_KEY: ${{ secrets.PIPELINE_APP_PRIVATE_KEY }}
     with:
       issue-number: ${{ github.event.issue.number || inputs.issue-number }}
       runner-labels: '["ubuntu-latest"]'      # public repo → GitHub-hosted only
@@ -40,7 +45,10 @@ jobs:
       # both so the shared-scripts cross-repo checkout resolves to THIS pipeline.
       pipeline-repo: freaxnx01/agent-pipeline
       pipeline-ref: v1
-      # auto-review intentionally omitted → draft-PR-only posture. Full
-      # auto-merge needs a GitHub App/PAT for PR creation (the ambient
-      # GITHUB_TOKEN's PRs don't trigger required checks and don't match the
-      # author allowlist) — see agent-pipeline issues #54 and #55.
+      # Auto-review + auto-merge (ADR-002). Fires only when an issue ALSO carries
+      # the `ai-auto-review` label; otherwise the PR stays draft. PRs are opened
+      # by the quicktask-pipeline-bot GitHub App (secrets above) so they trigger
+      # the required `osv-scan` check; the allowlist matches the App's bot login
+      # (app/… ⇄ …[bot] normalization, agent-pipeline #54).
+      auto-review: true
+      pipeline-author-allowlist: quicktask-pipeline-bot[bot]
