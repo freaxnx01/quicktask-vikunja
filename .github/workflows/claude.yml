@@ -23,7 +23,7 @@ jobs:
     if: >-
       (github.event_name == 'issues' && github.event.label.name == 'ai-implement')
       || github.event_name == 'workflow_dispatch'
-    uses: freaxnx01/agent-pipeline/.github/workflows/claude-implement.yml@v1
+    uses: freaxnx01/agent-workflow/.github/workflows/claude-implement.yml@v1
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       # Used only when an issue resolves to the OpenCode agent
@@ -42,7 +42,7 @@ jobs:
       # The reusable workflow defaults pipeline-repo/ref to
       # freaxnx01/claude-pipeline@main (the project's original name). Override
       # both so the shared-scripts cross-repo checkout resolves to THIS pipeline.
-      pipeline-repo: freaxnx01/agent-pipeline
+      pipeline-repo: freaxnx01/agent-workflow
       pipeline-ref: v1
       # Auto-review + auto-merge (ADR-002): fires only when an issue ALSO carries
       # the ai-auto-review label; PRs are opened by the quicktask-pipeline-bot App
