@@ -162,60 +162,20 @@ class VikunjaApi {
 
 ## Testing
 
-### Layout
-
-```text
-test/
-  <feature>_test.dart          ← widget tests for screens + flows
-  <module>_unit_test.dart      ← pure-Dart unit tests for repositories, parsers, models
-```
-
-Test files mirror the production tree where useful. Keep them flat and discoverable.
-
-### Conventions
-
 - `flutter_test` only by default. **Do not add `mockito`, `mocktail`, `build_runner`, or codegen-based mocking without asking** — write hand-rolled fakes that extend or implement the production class.
 - Inject fakes through the optional constructor params of the widget under test.
-- For `shared_preferences`-backed code, call `SharedPreferences.setMockInitialValues({})` in `setUp`.
-- For `flutter_secure_storage` use a fake subclass overriding `instanceUrl` / `apiToken` / `isConfigured` — there is no first-party in-memory backend.
-- Use `pumpAndSettle` after async work; for tight async loops a small explicit duration (`pumpAndSettle(const Duration(milliseconds: 100))`) is fine.
-- Always `addTearDown(...)` for `StreamController` / disposable test fakes.
-- Test naming: describe the behaviour in plain English (`'records the new task in local history after Done'`). The base instruction's `MethodName_StateUnderTest_ExpectedBehavior` pattern is fine for pure-Dart unit tests; widget tests read better as sentences.
-
-### Sample widget test skeleton
-
-```dart
-void main() {
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-  });
-
-  testWidgets('redirects share to setup screen when not configured', (tester) async {
-    final shareSource = _FakeShareIntentSource();
-    addTearDown(shareSource.dispose);
-
-    await tester.pumpWidget(MaterialApp(
-      home: HomePage(
-        storage: _UnconfiguredSecureStorage(),
-        shareSource: shareSource,
-        enableShareListener: true,
-      ),
-    ));
-    await tester.pumpAndSettle();
-
-    shareSource.fireTextShare('https://example.com/page');
-    await tester.pumpAndSettle();
-
-    expect(find.byType(ProjectPickerScreen), findsNothing);
-  });
-}
-```
+- Tests live flat under `test/` — `<feature>_test.dart` for widget tests, `<module>_unit_test.dart` for pure-Dart units.
+- `SharedPreferences.setMockInitialValues({})` in `setUp` for prefs-backed code; for `flutter_secure_storage` use a fake subclass — there is no first-party in-memory backend.
+- `pumpAndSettle` after async work; always `addTearDown(...)` for `StreamController` / disposable fakes.
+- Widget tests read as sentences (`'records the new task in local history after Done'`); pure-Dart units use the base `Method_State_Expected` idiom.
 
 ### Required after every change
 
 - `flutter analyze` passes with zero issues
 - `flutter test` passes the **full** suite — not just the new test
 - Never modify a test to make it green. Never hardcode return values, mock results, or stub logic to satisfy a test. Never silently swallow exceptions.
+
+Layout and a full widget-test skeleton: [`.ai/references/flutter/testing.md`](https://github.com/freaxnx01/ai-instructions/blob/main/.ai/references/flutter/testing.md)
 
 ---
 
@@ -234,37 +194,14 @@ Phase order and gates are defined in `base-instructions.md`. For Flutter:
 
 Base rules for language support and regional formatting live in `base-instructions.md`. For this stack:
 
-- Add `flutter_localizations` (SDK) and `intl` to `pubspec.yaml`. Generate ARB-driven message classes via `flutter gen-l10n` — `l10n.yaml` configured for `lib/l10n/app_en.arb` and `app_de.arb`.
-- `MaterialApp` configuration:
-
-  ```dart
-  MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: const [
-      Locale('en'),
-      Locale('de', 'CH'),
-      Locale('de', 'DE'),
-      Locale('de', 'AT'),
-    ],
-    localeResolutionCallback: (deviceLocale, supported) {
-      if (deviceLocale?.languageCode == 'de') {
-        return supported.firstWhere(
-          (l) => l.languageCode == 'de'
-              && l.countryCode == deviceLocale!.countryCode,
-          orElse: () => const Locale('de', 'CH'), // fallback for unrecognized de-*
-        );
-      }
-      return const Locale('en');
-    },
-    locale: _userOverride, // null = follow OS
-    // ...
-  );
-  ```
-
+- Add `flutter_localizations` (SDK) and `intl` to `pubspec.yaml`; generate ARB-driven message classes with `flutter gen-l10n` (`lib/l10n/app_en.arb`, `app_de.arb`).
+- Wire `localizationsDelegates` / `supportedLocales` on `MaterialApp`, with a `localeResolutionCallback` that falls back to `de-CH` for unrecognized `de-*` regions.
 - Persist the user's language override in `shared_preferences` (key: `app.locale`); `null` means follow OS.
-- Format dates with `DateFormat.yMd(locale.toLanguageTag())`, numbers with `NumberFormat.decimalPattern(locale.toLanguageTag())`, currency with `NumberFormat.simpleCurrency(locale: locale.toLanguageTag())`.
+- Format dates with `DateFormat.yMd(locale.toLanguageTag())`, numbers with `NumberFormat.decimalPattern(...)`, currency with `NumberFormat.simpleCurrency(locale: ...)`.
 - Never call `.toString()` on `DateTime` / `num` for user-visible text — always go through `intl`.
 - All user-visible strings come from `AppLocalizations.of(context)` — no string literals in widget trees.
+
+Full `MaterialApp` wiring: [`.ai/references/flutter/localization.md`](https://github.com/freaxnx01/ai-instructions/blob/main/.ai/references/flutter/localization.md)
 
 ---
 
@@ -307,39 +244,13 @@ flutter pub outdated                   # see what's behind
 
 ## Platform-Specific Notes
 
-### Android
+- **Never commit a keystore or `key.properties`.** Reference release-signing material via env-driven Gradle properties; dev stays debug-signed.
+- `applicationId` / `namespace` (Android) and the iOS bundle ID use reverse-DNS (`ch.freaxnx01.<app>`) and must stay in sync.
+- Every iOS `Info.plist` permission needs a human-readable purpose string — App Store review rejects without one.
+- Branch on `defaultTargetPlatform` only where behaviour genuinely differs; some plugins are mobile-only and need a guard.
+- Enable web support only when actually shipping a web build — no `dart:io`, and `flutter_secure_storage` silently falls back to localStorage.
 
-- Manifest at `android/app/src/main/AndroidManifest.xml`. Add `<uses-permission>` only when needed; `INTERNET` is enough for an HTTP-only app.
-- Share-target intent filters live on `MainActivity` (`android.intent.action.SEND` / `SEND_MULTIPLE`).
-- `applicationId` and `namespace` in `android/app/build.gradle`/`build.gradle.kts` use reverse-DNS (`ch.freaxnx01.<app>`).
-- `compileOptions` and `kotlinOptions` target Java/Kotlin 17.
-- Release signing: **never commit a keystore or `key.properties`**. Reference them via env-driven Gradle properties; default to debug-signed in dev as the scaffolded `buildTypes.release` does.
-- `minSdk` / `targetSdk` come from `flutter.*` — do not hand-pin unless a plugin requires it.
-
-### iOS
-
-- Bundle ID set in Xcode (`Runner.xcodeproj`); keep it in sync with the Android `applicationId`.
-- Permissions go in `ios/Runner/Info.plist` with `NSCameraUsageDescription`, etc. — every entry needs a human-readable purpose string or App Store review will reject.
-- Dart-side code targets iOS through the same code path; only branch on `Platform.isIOS` / `defaultTargetPlatform == TargetPlatform.iOS` when behaviour genuinely differs.
-- Building for iOS requires macOS + Xcode + a CocoaPods install (`cd ios && pod install`) after adding/upgrading plugins.
-
-### Desktop (Windows / macOS / Linux)
-
-- Confirm desktop support is enabled (`flutter config --enable-windows-desktop`, etc.) and the platform folder is committed.
-- Some plugins are mobile-only — guard their use behind a platform check, e.g.:
-
-  ```dart
-  bool get _isMobile =>
-      defaultTargetPlatform == TargetPlatform.android ||
-      defaultTargetPlatform == TargetPlatform.iOS;
-  ```
-
-- Window size, title, and min size are configured in `windows/runner/main.cpp` and `linux/my_application.cc`.
-
-### Web
-
-- Only enable web support when actually shipping a web build — it adds wasm/JS interop pitfalls (no `dart:io`, `flutter_secure_storage` falls back to localStorage, etc.).
-- `flutter build web --release` outputs to `build/web/`. Serve with proper cache headers.
+Per-platform detail (Android, iOS, desktop, web): [`.ai/references/flutter/platform-notes.md`](https://github.com/freaxnx01/ai-instructions/blob/main/.ai/references/flutter/platform-notes.md)
 
 ---
 

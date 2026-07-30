@@ -83,27 +83,9 @@ These commands ship from the global operator console (`agent-workflow`), install
 
 ## Localization (i18n) & Regional Formatting
 
-User-facing apps must support **`de` and `en`**. CI tooling and developer-only utilities are exempt.
+User-facing apps support **`de` and `en`** (CI/dev tooling exempt). Regional formatting follows the **OS region**, not the UI language; `de` with an unknown region falls back to **`de-CH`**. Render via the platform localization API, never `string.Format` / `toString()`.
 
-### Language
-
-- Default language resolved from the OS / browser locale at first launch
-- User can override at runtime via an in-app language switcher
-- The user's choice is persisted (cookie, preferences store, or user profile — stack-specific)
-
-### Regional formatting (decoupled from language)
-
-Regional formatting (date, time, number, currency separators) is selected from the OS region — **not** dictated by the language.
-
-- Auto-detect any `de-*` OS region (`de-CH`, `de-DE`, `de-AT`, …) and use the matching culture
-- If the language is `de` but the OS region is missing or unrecognized: fall back to **`de-CH`**
-- For `en`: use the OS-provided region (typically `en-US` / `en-GB`) — do not force a default
-
-### Rules
-
-- All date / number / currency rendering goes through the platform's localization API — never hand-format with raw `string.Format` / `toString()` / template literals.
-- Do not couple regional formatting to the UI language. A user can read German text with US formatting, or English text with Swiss formatting; both must work.
-- Stack overlays specify the concrete API (`CultureInfo` + `RequestLocalization` for .NET, `flutter_localizations` + `intl` for Flutter, etc.).
+Full rules: [`localization.md`](https://github.com/freaxnx01/ai-instructions/blob/main/.ai/references/base/localization.md)
 
 ---
 
@@ -158,7 +140,7 @@ main              ← always deployable, protected
 - Delete branch after merge
 - Rebase or squash merge — no merge commits on `main`
 
-Exception: trivial non-code edits (build-script tweaks, comments, docs typos) may skip review and push directly; CI must still pass. Source/runtime-config/CI changes still need a PR.
+All changes go through a PR, including docs-only ones. There is no trivial-edit exception: a direct push to a protected `main` lands before the required checks report, so they become a postmortem instead of a gate, and it leaves open PRs' branches stale.
 
 ---
 
@@ -232,6 +214,20 @@ Pipeline stages: `build` → `test` → `security-scan` → `container-build` �
 - E2E tests run against the built image before it is marked as a release candidate
 
 Concrete CI configuration (GitHub Actions YAML, commands, package scanners) lives in the stack overlay.
+
+---
+
+## Scripting
+
+**PowerShell — customer-delivered scripts target Windows PowerShell 5.1.** Anything a customer runs (`build.ps1`, install/deploy scripts, release artifacts) must run on 5.1 unless the project documents a PS 7+ floor; `pwsh` is not installed there.
+
+- **Never** use `??`, `??=`, ternary `? :`, `?.`, `&&` / `||` chains — *parse* errors on 5.1, so the script dies before its first line — nor `ForEach-Object -Parallel`, `Sort-Object -Stable`, `-SslProtocol`
+- `$IsWindows` / `$IsLinux` / `$IsMacOS` **do not exist** on 5.1 — they are `$null`, so the branch is silently skipped. Use `$env:OS -eq 'Windows_NT'`
+- Pass `-Depth` to `ConvertTo-Json` (defaults to 2, truncates silently) and `-UseBasicParsing` to the web cmdlets (a patched host prompts and hangs)
+- Start with `#requires -Version 5.1`, pin encoding, verify with PSScriptAnalyzer
+- **Exempt:** dev-loop tooling (`justfile` recipes) may require `pwsh`
+
+Full rules: [`powershell-5.1.md`](https://github.com/freaxnx01/ai-instructions/blob/main/.ai/references/base/powershell-5.1.md)
 
 ---
 
