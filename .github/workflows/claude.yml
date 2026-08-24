@@ -38,10 +38,10 @@ jobs:
       issue-number: ${{ github.event.issue.number || inputs.issue-number }}
       runner-labels: '["ubuntu-latest"]'      # public repo → GitHub-hosted only
       default-model: claude-opus-4-7
-      # ── REQUIRED for agent-pipeline consumers ──
-      # The reusable workflow defaults pipeline-repo/ref to
-      # freaxnx01/claude-pipeline@main (the project's original name). Override
-      # both so the shared-scripts cross-repo checkout resolves to THIS pipeline.
+      # The reusable workflow's own default is freaxnx01/agent-workflow@main
+      # (post-rename, ADR-006), so this is now redundant with that default —
+      # kept explicit so a future default change upstream doesn't silently
+      # retarget this repo's pipeline checkout.
       pipeline-repo: freaxnx01/agent-workflow
       pipeline-ref: v1
       # Auto-review + auto-merge (ADR-002): fires only when an issue ALSO carries
