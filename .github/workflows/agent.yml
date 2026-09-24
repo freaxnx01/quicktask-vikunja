@@ -7,6 +7,8 @@ permissions:            # a reusable workflow can't be granted more than its
   contents: write       # caller; the repo's default GITHUB_TOKEN is read-only,
   pull-requests: write  # so omitting this fails the run at startup_failure.
   issues: write
+  actions: write        # retry-dispatch.sh re-dispatches THIS workflow; without
+                        # it every retry 403s and transient failures go hard
 
 jobs:
   claude:
